@@ -15,7 +15,7 @@ class Grammar:
             if len(seq) == 0:
                 return {ε}
             if seq[0] in terminals:
-                return seq[0]
+                return {seq[0]}
             if ε not in starts[seq[0]]:
                 return starts[seq[0]]
             return starts[seq[0]] - {ε} | get_firsts(seq[1:])
@@ -41,7 +41,7 @@ class Grammar:
             if len(seq) == 0:
                 return {ε}
             if seq[0] in terminals:
-                return seq[0]
+                return {seq[0]}
             if ε not in starts[seq[0]]:
                 return starts[seq[0]]
             return starts[seq[0]] - {ε} | get_firsts(seq[1:])
