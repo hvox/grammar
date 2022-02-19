@@ -33,7 +33,7 @@ class Grammar:
 
     def postfixes(self):
         rules, terminals = self.rules, self.terminals
-        starts = self.starts
+        starts = self.starts()
         postfixes = {nt: set() for nt, _ in rules}
         postfixes[next(iter(rules))[0]] = {τ}
 
