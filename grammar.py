@@ -33,11 +33,11 @@ class Grammar:
             if not anything_has_changed:
                 return prefixes
 
-    def postfixes(self):
+    def followers(self):
         rules, terminals = self.rules, self.terminals
         prefixes = self.prefixes()
-        postfixes = {nt: set() for nt, _ in rules}
-        postfixes[next(iter(rules))[0]] = {τ}
+        followers = {nt: set() for nt, _ in rules}
+        followers[next(iter(rules))[0]] = {τ}
 
         def get_firsts(seq):
             if len(seq) == 0:
@@ -56,18 +56,18 @@ class Grammar:
                         continue
                     nt2 = s
                     if i == len(seq) - 1:
-                        updates.append((postfixes[nt1], nt2))
+                        updates.append((followers[nt1], nt2))
                         continue
                     for s in get_firsts(seq[i + 1 :]):
                         if s == ε:
-                            updates.append((postfixes[nt1], nt2))
+                            updates.append((followers[nt1], nt2))
                         else:
                             updates.append(({s}, nt2))
             updated = False
             for terms, nt in updates:
                 for t in terms:
-                    if t not in postfixes[nt]:
+                    if t not in followers[nt]:
                         updated = True
-                        postfixes[nt].add(t)
+                        followers[nt].add(t)
             if not updated:
-                return postfixes
+                return followers
