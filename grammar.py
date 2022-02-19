@@ -94,8 +94,5 @@ class Grammar:
                 self.cached_followers = followers
                 return
 
-    def __eq__(u, v):
-        return (u.rules, u.terminals) == (v.rules, v.terminals)
-
     def __hash__(self):
         return hash((self.rules, self.terminals))
