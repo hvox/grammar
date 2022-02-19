@@ -8,8 +8,17 @@ from dataclasses import dataclass
 class Grammar:
     rules: [(str, (str))]
     terminals: {str}
+    cached_prefixes: {str: {str}} = None
+    cached_followers: {str: {str}} = None
 
-    def prefixes(self):
+    def prefixes(self, nonterminal=None):
+        if self.cached_prefixes is None:
+            self.update_prefixes()
+        if nonterminal is None:
+            return self.cached_prefixes
+        return self.cached_prefixes[nonterminal]
+
+    def update_prefixes(self):
         rules, terminals = self.rules, self.terminals
         prefixes = {nt: set() for nt, _ in rules}
 
@@ -31,9 +40,17 @@ class Grammar:
                     prefixes[nt].add(first)
                     anything_has_changed = True
             if not anything_has_changed:
-                return prefixes
+                self.cached_prefixes = prefixes
+                return
 
-    def followers(self):
+    def followers(self, nonterminal=None):
+        if self.cached_followers is None:
+            self.update_followers()
+        if nonterminal is None:
+            return self.cached_followers
+        return self.cached_followers[nonterminal]
+
+    def update_followers(self):
         rules, terminals = self.rules, self.terminals
         prefixes = self.prefixes()
         followers = {nt: set() for nt, _ in rules}
@@ -70,4 +87,5 @@ class Grammar:
                         updated = True
                         followers[nt].add(t)
             if not updated:
-                return followers
+                self.cached_followers = followers
+                return
