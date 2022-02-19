@@ -6,10 +6,14 @@ from dataclasses import dataclass
 
 @dataclass
 class Grammar:
-    rules: [(str, (str))]
+    rules: ((str, (str)),)
     terminals: {str}
     cached_prefixes: {str: {str}} = None
     cached_followers: {str: {str}} = None
+
+    def __init__(self, rules, terminals):
+        self.rules = tuple(rules)
+        self.terminals = frozenset(terminals)
 
     def prefixes(self, nonterminal=None):
         if self.cached_prefixes is None:
@@ -89,3 +93,9 @@ class Grammar:
             if not updated:
                 self.cached_followers = followers
                 return
+
+    def __eq__(u, v):
+        return (u.rules, u.terminals) == (v.rules, v.terminals)
+
+    def __hash__(self):
+        return hash((self.rules, self.terminals))
