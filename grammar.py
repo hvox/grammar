@@ -1,11 +1,13 @@
+from dataclasses import dataclass
+
 ε = ()
 τ = None
 
 
+@dataclass
 class Grammar:
-    def __init__(self, rules, terminals):
-        self.rules = rules
-        self.terminals = terminals
+    rules: [(str, (str))]
+    terminals: {str}
 
     def starts(self):
         rules, terminals = self.rules, self.terminals
