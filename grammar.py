@@ -9,33 +9,33 @@ class Grammar:
     rules: [(str, (str))]
     terminals: {str}
 
-    def starts(self):
+    def prefixes(self):
         rules, terminals = self.rules, self.terminals
-        starts = {nt: set() for nt, _ in rules}
+        prefixes = {nt: set() for nt, _ in rules}
 
         def get_firsts(seq):
             if len(seq) == 0:
                 return {ε}
             if seq[0] in terminals:
                 return {seq[0]}
-            if ε not in starts[seq[0]]:
-                return starts[seq[0]]
-            return starts[seq[0]] - {ε} | get_firsts(seq[1:])
+            if ε not in prefixes[seq[0]]:
+                return prefixes[seq[0]]
+            return prefixes[seq[0]] - {ε} | get_firsts(seq[1:])
 
         while True:
             anything_has_changed = False
             for nt, seq in rules:
                 for first in get_firsts(seq):
-                    if first in starts[nt]:
+                    if first in prefixes[nt]:
                         continue
-                    starts[nt].add(first)
+                    prefixes[nt].add(first)
                     anything_has_changed = True
             if not anything_has_changed:
-                return starts
+                return prefixes
 
     def postfixes(self):
         rules, terminals = self.rules, self.terminals
-        starts = self.starts()
+        prefixes = self.prefixes()
         postfixes = {nt: set() for nt, _ in rules}
         postfixes[next(iter(rules))[0]] = {τ}
 
@@ -44,9 +44,9 @@ class Grammar:
                 return {ε}
             if seq[0] in terminals:
                 return {seq[0]}
-            if ε not in starts[seq[0]]:
-                return starts[seq[0]]
-            return starts[seq[0]] - {ε} | get_firsts(seq[1:])
+            if ε not in prefixes[seq[0]]:
+                return prefixes[seq[0]]
+            return prefixes[seq[0]] - {ε} | get_firsts(seq[1:])
 
         while True:
             updates = []
