@@ -1,1 +1,18 @@
 a7d8473
+/ll parser table creation/
+!test/
+#!/usr/bin/env python3
+from llparser import construct_table
+from grammar import Grammar
+
+grm = Grammar(
+    [
+        ("S", ("F",)),
+        ("S", ("OPEN", "S", "PLUS", "F", "CLOSE")),
+        ("F", ("a",)),
+    ]
+)
+
+assert construct_table(grm) == {("S", "a"): 0, ("S", "OPEN"): 1, ("F", "a"): 2}
+~ ~ ~
+\
