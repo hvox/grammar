@@ -1,4 +1,19 @@
 a7d8473
+/followers/
+!test/
+#!/usr/bin/env python3
+from grammar import Grammar
+
+grm = Grammar(
+    [
+        ("S", ("F",)),
+        ("S", ("OPEN", "S", "PLUS", "F", "CLOSE")),
+        ("F", ("a",)),
+    ]
+)
+assert grm.followers() == {'S': {'PLUS', None}, 'F': {'CLOSE', 'PLUS', None}}
+~ ~ ~
+\
 /grammar hashing/
 !test/
 #!/usr/bin/env python3
