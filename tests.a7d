@@ -1,4 +1,21 @@
 a7d8473
+/grammar serialization/
+!test/
+#!/usr/bin/env python3
+from grammar import Grammar
+
+grm1 = Grammar(
+    [
+        ("S", ("F",)),
+        ("S", ("OPEN", "S", "PLUS", "F", "CLOSE")),
+        ("F", ("a",)),
+    ]
+)
+grm2 = eval(repr(grm1))
+assert repr(grm1) == repr(grm2)
+assert grm1 == grm2
+~ ~ ~
+\
 /ll parser table creation/
 !test/
 #!/usr/bin/env python3
