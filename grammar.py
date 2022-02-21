@@ -44,6 +44,8 @@ class Grammar:
                     prefixes[nt].add(first)
                     anything_has_changed = True
             if not anything_has_changed:
+                for _, seq in rules:
+                    prefixes[seq] = get_firsts(seq)
                 self.cached_prefixes = prefixes
                 return
 
