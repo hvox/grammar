@@ -8,14 +8,15 @@ from dataclasses import dataclass
 class Grammar:
     rules: ((str, (str)),)
     terminals: {str}
+    nonterminals: {str}
     cached_prefixes: {str: {str}} = None
     cached_followers: {str: {str}} = None
 
     def __init__(self, rules):
         self.rules = tuple(rules)
-        nonterminals = {nt for nt, _ in rules}
+        self.nonterminals = {nt for nt, _ in rules}
         symbols = {s for _, seq in rules for s in seq}
-        self.terminals = {t for t in symbols if t not in nonterminals}
+        self.terminals = {t for t in symbols if t not in self.nonterminals}
 
     def __repr__(self):
         return f"Grammar({self.rules})"
