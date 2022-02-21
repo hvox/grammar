@@ -30,12 +30,12 @@ def parser(grm):
         for symbol in seq:
             if symbol in terminals:
                 if symbol != next(source):
-                    raise ValueError("Syntax Error: wrong term")
+                    raise SyntaxError(f"Expected {symbol}")
                 fields.append(symbol)
             else:
                 state = (symbol, source.get_next())
                 if state not in table:
-                    raise ValueError("Syntax Error: unexpected term")
+                    raise SyntaxError(f"Unexpected token: {source.get_next()}")
                 fields.append(parse_rule(source, rules[table[state]]))
         return (nt, tuple(fields))
 
@@ -46,6 +46,6 @@ def parser(grm):
                 continue
             if source.get_next() in prefixes[seq]:
                 return parse_rule(source, (nt, seq))
-        raise ValueError("Syntax Error")
+        raise SyntaxError()
 
     return parse_symbol
