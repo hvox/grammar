@@ -66,3 +66,18 @@ grm = Grammar(
 assert construct_table(grm) == {("S", "a"): 0, ("S", "OPEN"): 1, ("F", "a"): 2}
 ~ ~ ~
 \
+/prefixes/
+!test/
+#!/usr/bin/env python3
+from grammar import Grammar
+
+grm = Grammar(
+    [
+        ("S", ("F",)),
+        ("S", ("OPEN", "S", "PLUS", "F", "CLOSE")),
+        ("F", ("a",)),
+    ]
+)
+assert grm.prefixes() == {'S': {'a', 'OPEN'}, 'F': {'a'}, ('F',): {'a'}, ('OPEN', 'S', 'PLUS', 'F', 'CLOSE'): {'OPEN'}, ('a',): {'a'}}
+~ ~ ~
+\
