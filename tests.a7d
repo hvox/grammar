@@ -11,7 +11,7 @@ grm = Grammar(
         ("F", ("a",)),
     ]
 )
-assert grm.followers() == {'S': {'PLUS', None}, 'F': {'CLOSE', 'PLUS', None}}
+assert grm.followers() == {"S": {"PLUS", None}, "F": {"CLOSE", "PLUS", None}}
 ~ ~ ~
 \
 /grammar hashing/
@@ -78,6 +78,12 @@ grm = Grammar(
         ("F", ("a",)),
     ]
 )
-assert grm.prefixes() == {'S': {'a', 'OPEN'}, 'F': {'a'}, ('F',): {'a'}, ('OPEN', 'S', 'PLUS', 'F', 'CLOSE'): {'OPEN'}, ('a',): {'a'}}
+assert grm.prefixes() == {
+    "S": {"a", "OPEN"},
+    "F": {"a"},
+    ("F",): {"a"},
+    ("OPEN", "S", "PLUS", "F", "CLOSE"): {"OPEN"},
+    ("a",): {"a"},
+}
 ~ ~ ~
 \
