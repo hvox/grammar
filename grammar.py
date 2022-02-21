@@ -26,26 +26,26 @@ class Grammar:
         rules, terminals = self.rules, self.terminals
         prefixes = {nt: set() for nt, _ in rules}
 
-        def get_firsts(seq):
+        def get_prefixes(seq):
             if len(seq) == 0:
                 return {ε}
             if seq[0] in terminals:
                 return {seq[0]}
             if ε not in prefixes[seq[0]]:
                 return prefixes[seq[0]]
-            return prefixes[seq[0]] - {ε} | get_firsts(seq[1:])
+            return prefixes[seq[0]] - {ε} | get_prefixes(seq[1:])
 
         while True:
             anything_has_changed = False
             for nt, seq in rules:
-                for first in get_firsts(seq):
+                for first in get_prefixes(seq):
                     if first in prefixes[nt]:
                         continue
                     prefixes[nt].add(first)
                     anything_has_changed = True
             if not anything_has_changed:
                 for _, seq in rules:
-                    prefixes[seq] = get_firsts(seq)
+                    prefixes[seq] = get_prefixes(seq)
                 self.cached_prefixes = prefixes
                 return
 
@@ -62,14 +62,14 @@ class Grammar:
         followers = {nt: set() for nt, _ in rules}
         followers[next(iter(rules))[0]] = {τ}
 
-        def get_firsts(seq):
+        def get_prefixes(seq):
             if len(seq) == 0:
                 return {ε}
             if seq[0] in terminals:
                 return {seq[0]}
             if ε not in prefixes[seq[0]]:
                 return prefixes[seq[0]]
-            return prefixes[seq[0]] - {ε} | get_firsts(seq[1:])
+            return prefixes[seq[0]] - {ε} | get_prefixes(seq[1:])
 
         while True:
             updates = []
@@ -81,7 +81,7 @@ class Grammar:
                     if i == len(seq) - 1:
                         updates.append((followers[nt1], nt2))
                         continue
-                    for s in get_firsts(seq[i + 1 :]):
+                    for s in get_prefixes(seq[i + 1 :]):
                         if s == ε:
                             updates.append((followers[nt1], nt2))
                         else:
