@@ -11,12 +11,14 @@ class Grammar:
     cached_prefixes: {str: {str}} = None
     cached_followers: {str: {str}} = None
 
-    def __init__(self, rules, terminals):
+    def __init__(self, rules):
         self.rules = tuple(rules)
-        self.terminals = frozenset(terminals)
+        nonterminals = {nt for nt, _ in rules}
+        symbols = {s for _, seq in rules for s in seq}
+        self.terminals = {t for t in symbols if t not in nonterminals}
 
     def __repr__(self):
-        return f"Grammar({self.rules}, {self.terminals})"
+        return f"Grammar({self.rules})"
 
     def prefixes(self, nonterminal=None):
         if self.cached_prefixes is None:
@@ -103,4 +105,4 @@ class Grammar:
         return (u.rules, u.terminals) == (v.rules, v.terminals)
 
     def __hash__(self):
-        return hash((self.rules, self.terminals))
+        return hash(self.rules)
