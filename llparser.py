@@ -39,4 +39,13 @@ def parser(grm):
                 fields.append(parse_rule(source, rules[table[state]]))
         return (nt, tuple(fields))
 
-    return parse_rule
+    def parse_symbol(source, symbol=rules[0][0]):
+        source = LookAheadIterator(source)
+        for nt, seq in rules:
+            if nt != symbol:
+                continue
+            if source.get_next() in prefixes[seq]:
+                return parse_rule(source, (nt, seq))
+        raise ValueError("Syntax Error")
+
+    return parse_symbol
