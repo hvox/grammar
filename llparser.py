@@ -1,3 +1,4 @@
+from lookaheaditerators import LookAheadIterator
 from grammar import ε, τ
 
 
@@ -15,3 +16,27 @@ def construct_table(grm):
             else:
                 table[nt, term] = i
     return table
+
+
+def parser(grm):
+    terminals = grm.terminals
+    table = construct_table(grm)
+    rules = grm.rules
+    prefixes = grm.prefixes()
+
+    def parse_rule(source, rule):
+        nt, seq = rule
+        fields = []
+        for symbol in seq:
+            if symbol in terminals:
+                if symbol != next(source):
+                    raise ValueError("Syntax Error: wrong term")
+                fields.append(symbol)
+            else:
+                state = (symbol, source.get_next())
+                if state not in table:
+                    raise ValueError("Syntax Error: unexpected term")
+                fields.append(parse_rule(source, rules[table[state]]))
+        return (nt, tuple(fields))
+
+    return parse_rule
