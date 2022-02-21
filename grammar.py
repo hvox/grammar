@@ -15,6 +15,9 @@ class Grammar:
         self.rules = tuple(rules)
         self.terminals = frozenset(terminals)
 
+    def __repr__(self):
+        return f"Grammar({self.rules}, {self.terminals})"
+
     def prefixes(self, nonterminal=None):
         if self.cached_prefixes is None:
             self.update_prefixes()
