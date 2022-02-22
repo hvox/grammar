@@ -23,8 +23,6 @@ class LookAheadIterator:
         return elem
 
     def __iter__(self):
-        while True:
-            if self.finished:
-                return
+        while not self.finished:
             current = self.goto_next()
             yield current
