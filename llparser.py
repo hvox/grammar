@@ -4,7 +4,7 @@ from grammar import Grammar, ε, τ
 
 
 def construct_table(grm):
-    nonterminals, terminals = {nt for nt, _ in grm.rules}, grm.terminals
+    nonterminals, terminals = grm.nonterminals, grm.terminals
     followers, prefixes = grm.followers(), grm.prefixes()
     rules = grm.rules
     table = {}
