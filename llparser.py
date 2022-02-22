@@ -1,6 +1,6 @@
 from lookaheaditerators import LookAheadIterator
 from dataclasses import dataclass
-from grammar import Grammar, ε, τ
+from grammars import Grammar, ε, τ
 
 
 def construct_table(grm):

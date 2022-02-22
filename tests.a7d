@@ -2,7 +2,7 @@ a7d8473
 /followers/
 !test/
 #!/usr/bin/env python3
-from grammar import Grammar
+from grammars import Grammar
 
 grm = Grammar(
     [
@@ -17,7 +17,7 @@ assert grm.followers() == {"S": {"PLUS", None}, "F": {"CLOSE", "PLUS", None}}
 /grammar hashing/
 !test/
 #!/usr/bin/env python3
-from grammar import Grammar
+from grammars import Grammar
 
 grm1 = Grammar([("S", ("F", "F"))])
 grm2 = Grammar(
@@ -35,7 +35,7 @@ assert hash(grm2) == hash(grm3)
 /grammar serialization/
 !test/
 #!/usr/bin/env python3
-from grammar import Grammar
+from grammars import Grammar
 
 grm1 = Grammar(
     [
@@ -53,7 +53,7 @@ assert grm1 == grm2
 !test/
 #!/usr/bin/env python3
 from llparser import construct_table
-from grammar import Grammar
+from grammars import Grammar
 
 grm = Grammar(
     [
@@ -69,7 +69,7 @@ assert construct_table(grm) == {("S", "a"): 0, ("S", "OPEN"): 1, ("F", "a"): 2}
 /ll1 parser/
 !test/
 #!/usr/bin/env python3
-from grammar import Grammar
+from grammars import Grammar
 from llparser import Parser
 
 grm = Grammar(
@@ -87,7 +87,7 @@ print('(a+a) ->', parse(['OPEN', 'a', 'PLUS', 'a', 'CLOSE']))
 /prefixes/
 !test/
 #!/usr/bin/env python3
-from grammar import Grammar
+from grammars import Grammar
 
 grm = Grammar(
     [
