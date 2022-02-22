@@ -24,7 +24,7 @@ def parser(grm):
     rules = grm.rules
     prefixes = grm.prefixes()
 
-    def parse_symbol_monolitic(source, symbol):
+    def parse_symbol(source, symbol):
         if symbol in terminals:
             if symbol != source.next:
                 raise SyntaxError(f"Expected {symbol}")
@@ -32,34 +32,7 @@ def parser(grm):
         state = (symbol, source.next)
         if state not in table:
             raise SyntaxError(f"Unexpected token: {source.next}")
-        fields = tuple(parse_symbol_monolitic(source, s) for s in rules[table[state]][1])
+        fields = tuple(parse_symbol(source, s) for s in rules[table[state]][1])
         return (symbol, fields)
 
-    def parse_rule(source, rule):
-        nt, seq = rule
-        fields = []
-        for symbol in seq:
-            if symbol in terminals:
-                if symbol != next(source):
-                    raise SyntaxError(f"Expected {symbol}")
-                fields.append(symbol)
-            else:
-                state = (symbol, source.next)
-                if state not in table:
-                    raise SyntaxError(f"Unexpected token: {source.next}")
-                fields.append(parse_rule(source, rules[table[state]]))
-        return (nt, tuple(fields))
-
-    def parse_symbol(source, symbol=rules[0][0]):
-        source = LookAheadIterator(source)
-        for nt, seq in rules:
-            if nt != symbol:
-                continue
-            if source.next in prefixes[seq]:
-                return parse_rule(source, (nt, seq))
-        raise SyntaxError()
-
-    #return parse_symbol_monolitic
-    def parse(source, symbol=rules[0][0]):
-        return parse_symbol_monolitic(LookAheadIterator(source), symbol)
-    return parse
+    return lambda src, sm=rules[0][0]: parse_symbol(LookAheadIterator(src), sm)
