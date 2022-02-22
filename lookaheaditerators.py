@@ -3,9 +3,9 @@ class LookAheadIterator:
         self.iterator = iter(it)
         self.finished = False
         self.next = None
-        self.goto_next()
+        next(self)
 
-    def goto_next(self):
+    def __next__(self):
         current = self.next
         try:
             self.next = next(self.iterator)
@@ -14,11 +14,7 @@ class LookAheadIterator:
             self.finished = True
         return current
 
-    def __next__(self):
-        elem = self.goto_next()
-        return elem
-
     def __iter__(self):
         while not self.finished:
-            current = self.goto_next()
+            current = next(self)
             yield current
