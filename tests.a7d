@@ -66,6 +66,24 @@ grm = Grammar(
 assert construct_table(grm) == {("S", "a"): 0, ("S", "OPEN"): 1, ("F", "a"): 2}
 ~ ~ ~
 \
+/ll1 parser/
+!test/
+#!/usr/bin/env python3
+from grammar import Grammar
+from llparser import parser
+
+grm = Grammar(
+    [
+        ("S", ("F",)),
+        ("S", ("OPEN", "S", "PLUS", "F", "CLOSE")),
+        ("F", ("a",)),
+    ]
+)
+
+parse = parser(grm)
+print('(a+a) ->', parse(['OPEN', 'a', 'PLUS', 'a', 'CLOSE']))
+~ ~ ~
+\
 /prefixes/
 !test/
 #!/usr/bin/env python3
