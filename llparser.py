@@ -33,9 +33,9 @@ def parser(grm):
                     raise SyntaxError(f"Expected {symbol}")
                 fields.append(symbol)
             else:
-                state = (symbol, source.get_next())
+                state = (symbol, source.next)
                 if state not in table:
-                    raise SyntaxError(f"Unexpected token: {source.get_next()}")
+                    raise SyntaxError(f"Unexpected token: {source.next}")
                 fields.append(parse_rule(source, rules[table[state]]))
         return (nt, tuple(fields))
 
@@ -44,7 +44,7 @@ def parser(grm):
         for nt, seq in rules:
             if nt != symbol:
                 continue
-            if source.get_next() in prefixes[seq]:
+            if source.next in prefixes[seq]:
                 return parse_rule(source, (nt, seq))
         raise SyntaxError()
 
