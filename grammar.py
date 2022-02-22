@@ -103,7 +103,7 @@ class Grammar:
                 return
 
     def __eq__(u, v):
-        return (u.rules, u.terminals) == (v.rules, v.terminals)
+        return u.rules == v.rules
 
     def __hash__(self):
         return hash(self.rules)
