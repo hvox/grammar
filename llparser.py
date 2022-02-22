@@ -3,19 +3,19 @@ from dataclasses import dataclass
 from grammars import Grammar, ε, τ
 
 
-def construct_table(grm):
-    nonterminals, terminals = grm.nonterminals, grm.terminals
-    followers, prefixes = grm.followers(), grm.prefixes()
-    rules = grm.rules
+def construct_table(grammar):
+    nonterminals, terminals = grammar.nonterminals, grammar.terminals
+    followers, prefixes = grammar.followers(), grammar.prefixes()
+    rules = grammar.rules
     table = {}
     for i, rule in enumerate(rules):
-        nt, seq = rule
-        for term in prefixes[seq]:
-            if term == ε:
-                for term in followers[nt]:
-                    table[nt, term] = i
+        nonterminal, body = rule
+        for terminal in prefixes[body]:
+            if terminal == ε:
+                for terminal in followers[nonterminal]:
+                    table[nonterminal, terminal] = i
             else:
-                table[nt, term] = i
+                table[nonterminal, terminal] = i
     return table
 
 
