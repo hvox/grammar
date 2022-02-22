@@ -18,3 +18,6 @@ class LookAheadIterator:
         while not self.finished:
             current = next(self)
             yield current
+
+    def __repr__(self):
+        return f"<lookahead_iterator(next={self.next}) at {hex(id(self))}>"
