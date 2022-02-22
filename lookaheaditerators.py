@@ -14,10 +14,6 @@ class LookAheadIterator:
             self.finished = True
         return current
 
-    def get_next(self):
-        elem = self.next
-        return elem
-
     def __next__(self):
         elem = self.goto_next()
         return elem
