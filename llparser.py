@@ -24,6 +24,17 @@ def parser(grm):
     rules = grm.rules
     prefixes = grm.prefixes()
 
+    def parse_symbol_monolitic(source, symbol):
+        if symbol in terminals:
+            if symbol != source.next:
+                raise SyntaxError(f"Expected {symbol}")
+            return next(source)
+        state = (symbol, source.next)
+        if state not in table:
+            raise SyntaxError(f"Unexpected token: {source.next}")
+        fields = tuple(parse_symbol_monolitic(source, s) for s in rules[table[state]][1])
+        return (symbol, fields)
+
     def parse_rule(source, rule):
         nt, seq = rule
         fields = []
@@ -48,4 +59,7 @@ def parser(grm):
                 return parse_rule(source, (nt, seq))
         raise SyntaxError()
 
-    return parse_symbol
+    #return parse_symbol_monolitic
+    def parse(source, symbol=rules[0][0]):
+        return parse_symbol_monolitic(LookAheadIterator(source), symbol)
+    return parse
