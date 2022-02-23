@@ -29,13 +29,12 @@ class Grammar:
         return self.cached_prefixes[nonterminal]
 
     def update_prefixes(self):
-        rules, terminals = self.rules, self.terminals
-        prefixes = {nt: set() for nt, _ in rules}
+        prefixes = {nt: set() for nt in self.nonterminals}
 
         def get_prefixes(seq):
             if len(seq) == 0:
                 return {ε}
-            if seq[0] in terminals:
+            if seq[0] in self.terminals:
                 return {seq[0]}
             if ε not in prefixes[seq[0]]:
                 return prefixes[seq[0]]
@@ -43,14 +42,14 @@ class Grammar:
 
         while True:
             anything_has_changed = False
-            for nt, seq in rules:
+            for nt, seq in self.rules:
                 for first in get_prefixes(seq):
                     if first in prefixes[nt]:
                         continue
                     prefixes[nt].add(first)
                     anything_has_changed = True
             if not anything_has_changed:
-                for _, seq in rules:
+                for _, seq in self.rules:
                     prefixes[seq] = get_prefixes(seq)
                 self.cached_prefixes = prefixes
                 return
@@ -63,15 +62,14 @@ class Grammar:
         return self.cached_followers[nonterminal]
 
     def update_followers(self):
-        rules, terminals = self.rules, self.terminals
         prefixes = self.prefixes()
-        followers = {nt: set() for nt, _ in rules}
-        followers[next(iter(rules))[0]] = {τ}
+        followers = {nt: set() for nt in self.nonterminals}
+        followers[next(iter(self.rules))[0]] = {τ}
 
         def get_prefixes(seq):
             if len(seq) == 0:
                 return {ε}
-            if seq[0] in terminals:
+            if seq[0] in self.terminals:
                 return {seq[0]}
             if ε not in prefixes[seq[0]]:
                 return prefixes[seq[0]]
@@ -79,9 +77,9 @@ class Grammar:
 
         while True:
             updates = []
-            for nt1, seq in rules:
+            for nt1, seq in self.rules:
                 for i, s in enumerate(seq):
-                    if s in terminals:
+                    if s in self.terminals:
                         continue
                     nt2 = s
                     if i == len(seq) - 1:
