@@ -84,6 +84,50 @@ parse = Parser(grm).parse
 print('(a+a) ->', parse(['OPEN', 'a', 'PLUS', 'a', 'CLOSE']))
 ~ ~ ~
 \
+/ll1 parser parses sum/
+!test/
+#!/usr/bin/env python3
+from grammars import Grammar
+from llparser import Parser
+
+grm = Grammar(
+    [
+        ("S", ("T",)),
+        ("S", (ord("("), "S", ord("+"), "S", ord(")"))),
+        ("T", (ord("0"), "T")),
+        ("T", (ord("1"), "T")),
+        ("T", (ord("2"), "T")),
+        ("T", (ord("3"), "T")),
+        ("T", (ord("4"), "T")),
+        ("T", (ord("5"), "T")),
+        ("T", (ord("6"), "T")),
+        ("T", (ord("7"), "T")),
+        ("T", (ord("8"), "T")),
+        ("T", (ord("9"), "T")),
+        ("T", ()),
+    ]
+)
+
+
+def parse_sum(*args):
+    if len(args) == 2:
+        return int(args[1])
+    return int(args[2]) + int(args[4])
+
+
+def parse_number(*args):
+    if len(args) > 1:
+        return chr(args[1]) + args[2]
+    else:
+        return ""
+
+
+actions = {"T": parse_number, "S": parse_sum}
+parse = Parser(grm, actions=actions).parse
+src = "(123+(321+555))"
+assert parse(b"(123+(321+555))") == 999
+~ ~ ~
+\
 /ll1 parser with actions/
 !test/
 #!/usr/bin/env python3
