@@ -2,6 +2,7 @@ from lookaheaditerators import LookAheadIterator
 from dataclasses import dataclass, field
 from collections import defaultdict
 from grammars import Grammar, ε, τ
+from typing import Any
 
 
 def construct_table(grammar):
@@ -27,7 +28,7 @@ def get_default_actions():
 @dataclass
 class Parser:
     grammar: Grammar
-    table: {(str, str): int} = None
+    table: {(str, Any): int} = None
     actions: {str: callable} = None
 
     def __init__(self, grammar, table=None, actions=None):
