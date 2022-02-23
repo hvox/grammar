@@ -49,8 +49,10 @@ class Grammar:
                     prefixes[nt].add(first)
                     anything_has_changed = True
             if not anything_has_changed:
+                prefixes[()] = {ε}
                 for _, seq in self.rules:
-                    prefixes[seq] = get_prefixes(seq)
+                    for i in range(len(seq)):
+                        prefixes[seq[i:]] = get_prefixes(seq[i:])
                 self.cached_prefixes = prefixes
                 return
 
