@@ -84,6 +84,25 @@ parse = Parser(grm).parse
 print('(a+a) ->', parse(['OPEN', 'a', 'PLUS', 'a', 'CLOSE']))
 ~ ~ ~
 \
+/ll1 parser with actions/
+!test/
+#!/usr/bin/env python3
+from collections import defaultdict
+from grammars import Grammar
+from llparser import Parser
+
+grm = Grammar(
+    [
+        ("S", ("F",)),
+        ("S", ("OPEN", "S", "PLUS", "F", "CLOSE")),
+        ("F", ("a",)),
+    ]
+)
+
+parse = Parser(grm, actions=defaultdict(lambda: lambda *a: len(a))).parse
+assert parse(['OPEN', 'a', 'PLUS', 'a', 'CLOSE']) == 6
+~ ~ ~
+\
 /prefixes/
 !test/
 #!/usr/bin/env python3
