@@ -1,16 +1,17 @@
 from dataclasses import dataclass
+from typing import Any
 
-ε = ()
-τ = None
+ε = object()  # empty sequence of tokens
+τ = object()  # end of the input
 
 
 @dataclass
 class Grammar:
-    rules: ((str, (str)),)
-    terminals: {str}
+    rules: ((str, (Any,)),)
+    terminals: {Any}
     nonterminals: {str}
-    cached_prefixes: {str: {str}} = None
-    cached_followers: {str: {str}} = None
+    cached_prefixes: {str: {Any}} = None
+    cached_followers: {str: {Any}} = None
 
     def __init__(self, rules):
         self.rules = tuple(rules)
