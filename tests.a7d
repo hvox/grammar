@@ -118,8 +118,13 @@ grm = Grammar(
 assert grm.prefixes() == {
     "S": {"a", "OPEN"},
     "F": {"a"},
+    (): {()},
     ("F",): {"a"},
     ("OPEN", "S", "PLUS", "F", "CLOSE"): {"OPEN"},
+    ("S", "PLUS", "F", "CLOSE"): {"OPEN", "a"},
+    ("PLUS", "F", "CLOSE"): {"PLUS"},
+    ("F", "CLOSE"): {"a"},
+    ("CLOSE",): {"CLOSE"},
     ("a",): {"a"},
 }
 ~ ~ ~
