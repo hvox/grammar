@@ -68,15 +68,6 @@ class Grammar:
         followers = {nt: set() for nt in self.nonterminals}
         followers[next(iter(self.rules))[0]] = {τ}
 
-        def get_prefixes(seq):
-            if len(seq) == 0:
-                return {ε}
-            if seq[0] in self.terminals:
-                return {seq[0]}
-            if ε not in prefixes[seq[0]]:
-                return prefixes[seq[0]]
-            return prefixes[seq[0]] - {ε} | get_prefixes(seq[1:])
-
         while True:
             updates = []
             for nt1, seq in self.rules:
@@ -87,7 +78,7 @@ class Grammar:
                     if i == len(seq) - 1:
                         updates.append((followers[nt1], nt2))
                         continue
-                    for s in get_prefixes(seq[i + 1 :]):
+                    for s in prefixes[seq[i + 1 :]]:
                         if s == ε:
                             updates.append((followers[nt1], nt2))
                         else:
