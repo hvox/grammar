@@ -2,7 +2,7 @@ a7d8473
 /followers/
 !test/
 #!/usr/bin/env python3
-from grammars import Grammar
+from grammars import Grammar, ε, τ
 
 grm = Grammar(
     [
@@ -11,7 +11,7 @@ grm = Grammar(
         ("F", ("a",)),
     ]
 )
-assert grm.followers() == {"S": {"PLUS", None}, "F": {"CLOSE", "PLUS", None}}
+assert grm.followers() == {"S": {"PLUS", τ}, "F": {"CLOSE", "PLUS", τ}}
 ~ ~ ~
 \
 /grammar hashing/
@@ -106,7 +106,7 @@ assert parse(['OPEN', 'a', 'PLUS', 'a', 'CLOSE']) == 6
 /prefixes/
 !test/
 #!/usr/bin/env python3
-from grammars import Grammar
+from grammars import Grammar, ε, τ
 
 grm = Grammar(
     [
@@ -118,7 +118,7 @@ grm = Grammar(
 assert grm.prefixes() == {
     "S": {"a", "OPEN"},
     "F": {"a"},
-    (): {()},
+    (): {ε},
     ("F",): {"a"},
     ("OPEN", "S", "PLUS", "F", "CLOSE"): {"OPEN"},
     ("S", "PLUS", "F", "CLOSE"): {"OPEN", "a"},
