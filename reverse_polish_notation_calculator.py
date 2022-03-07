@@ -1,6 +1,6 @@
 from grammars import Grammar
 from llparser import Parser
-from operator import add, sub, mul
+from operator import add, sub, mul, mod
 
 
 parser = Parser(
@@ -11,9 +11,11 @@ parser = Parser(
             ("binary operation", ("addition",)),
             ("binary operation", ("substraction",)),
             ("binary operation", ("multiplication",)),
+            ("binary operation", ("modulo",)),
             ("addition", ("+", " ", "expression", " ", "expression")),
             ("substraction", ("-", " ", "expression", " ", "expression")),
             ("multiplication", ("*", " ", "expression", " ", "expression")),
+            ("modulo", ("%", " ", "expression", " ", "expression")),
             ("digits", ("digit", "digits_rest")),
             ("digits_rest", ("digit", "digits_rest")),
             ("digits_rest", ()),
@@ -46,7 +48,12 @@ def parse_digits(digit, rest):
 
 parser.actions = {"digits_rest": cat, "digits": parse_digits, "digit": idy}
 
-operations = {"addition": add, "substraction": sub, "multiplication": mul}
+operations = {
+    "addition": add,
+    "substraction": sub,
+    "multiplication": mul,
+    "modulo": mod,
+}
 
 
 def calculate(node):
