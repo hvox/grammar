@@ -143,8 +143,9 @@ grm = Grammar(
     ]
 )
 
-parse = Parser(grm, actions=defaultdict(lambda: lambda *a: len(a))).parse
-assert parse(['OPEN', 'a', 'PLUS', 'a', 'CLOSE']) == 6
+parser = Parser(grm)
+parser.actions = {symbol: (lambda *a: len(a)) for symbol in grm.nonterminals}
+assert parser.parse(["OPEN", "a", "PLUS", "a", "CLOSE"]) == 6
 ~ ~ ~
 \
 /prefixes/
