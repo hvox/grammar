@@ -1,8 +1,9 @@
 class LookAheadIterator:
-    def __init__(self, it):
+    def __init__(self, it, end=None):
         self.iterator = iter(it)
         self.finished = False
         self.next = None
+        self.none = end
         next(self)
 
     def __next__(self):
@@ -10,7 +11,7 @@ class LookAheadIterator:
         try:
             self.next = next(self.iterator)
         except StopIteration:
-            self.next = None
+            self.next = self.none
             self.finished = True
         return current
 
