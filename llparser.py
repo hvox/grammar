@@ -1,6 +1,5 @@
 from lookaheaditerators import LookAheadIterator
 from dataclasses import dataclass, field
-from collections import defaultdict
 from grammars import Grammar, ε, τ
 from typing import Any
 
@@ -21,20 +20,16 @@ def construct_table(grammar):
     return table
 
 
-def get_default_actions():
-    return defaultdict(lambda: lambda *f: f)
-
-
 @dataclass
 class Parser:
     grammar: Grammar
     table: {(str, Any): int} = None
     actions: {str: callable} = None
 
-    def __init__(self, grammar, table=None, actions=None):
-        self.actions = get_default_actions() if actions is None else actions
+    def __init__(self, grammar, table=None, actions={}):
         self.table = table or construct_table(grammar)
         self.grammar = grammar
+        self.actions = actions
 
     def parse_symbol(self, source, symbol):
         rules, table = self.grammar.rules, self.table
@@ -47,7 +42,7 @@ class Parser:
             raise SyntaxError(f"Unexpected token: {source.next}")
         rule = rules[table[state]][1]
         fields = tuple(self.parse_symbol(source, symbol) for symbol in rule)
-        return self.actions[symbol](symbol, *fields)
+        return self.actions.get(symbol, lambda *f: f)(symbol, *fields)
 
     def parse(self, source, symbol=None):
         symbol = symbol if symbol is not None else self.grammar.rules[0][0]
