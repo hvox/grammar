@@ -39,3 +39,18 @@ def parse_digits(digit, rest):
 
 
 parser.actions = {"digits_rest": cat, "digits": parse_digits, "digit": idy}
+
+
+def calculate(node):
+    operation, args = node
+    if operation == "expression":
+        return calculate(args[0])
+    if operation == "addition":
+        return calculate(args[2]) + calculate(args[4])
+    if operation == "number":
+        return args
+    raise Exception(f"wtf is {node}")
+
+
+def eval(source):
+    return calculate(parser.parse(source))
