@@ -42,7 +42,7 @@ class Parser:
             raise SyntaxError(f"Unexpected token: {source.next}")
         rule = rules[table[state]][1]
         fields = tuple(self.parse_symbol(source, symbol) for symbol in rule)
-        return self.actions.get(symbol, lambda *f: f)(symbol, *fields)
+        return self.actions.get(symbol, lambda *f: (symbol, f))(*fields)
 
     def parse(self, source, symbol=None):
         symbol = symbol if symbol is not None else self.grammar.rules[0][0]
