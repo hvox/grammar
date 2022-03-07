@@ -47,5 +47,5 @@ class Parser:
     def parse(self, source, symbol=None):
         symbol = symbol if symbol is not None else self.grammar.rules[0][0]
         if not (isinstance(source, LookAheadIterator)):
-            source = LookAheadIterator(source)
+            source = LookAheadIterator(source, end=τ)
         return self.parse_symbol(source, symbol)
