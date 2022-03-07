@@ -1,12 +1,14 @@
 from grammars import Grammar
 from llparser import Parser
+from operator import add
 
 
 parser = Parser(
     Grammar(
         [
-            ("expression", ("addition",)),
+            ("expression", ("binary operation",)),
             ("expression", ("digits",)),
+            ("binary operation", ("addition",)),
             ("addition", ("+", " ", "expression", " ", "expression")),
             ("digits", ("digit", "digits_rest")),
             ("digits_rest", ("digit", "digits_rest")),
@@ -40,13 +42,16 @@ def parse_digits(digit, rest):
 
 parser.actions = {"digits_rest": cat, "digits": parse_digits, "digit": idy}
 
+operations = {"addition": add}
+
 
 def calculate(node):
     operation, args = node
     if operation == "expression":
         return calculate(args[0])
-    if operation == "addition":
-        return calculate(args[2]) + calculate(args[4])
+    if operation == "binary operation":
+        op_name, args = args[0]
+        return operations[op_name](calculate(args[2]), calculate(args[4]))
     if operation == "number":
         return args
     raise Exception(f"wtf is {node}")
