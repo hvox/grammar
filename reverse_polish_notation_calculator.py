@@ -24,3 +24,18 @@ parser = Parser(
         ]
     )
 )
+
+
+def cat(*strings):
+    return "".join(strings)
+
+
+def idy(argument):
+    return argument
+
+
+def parse_digits(digit, rest):
+    return ("number", int(digit + rest))
+
+
+parser.actions = {"digits_rest": cat, "digits": parse_digits, "digit": idy}
