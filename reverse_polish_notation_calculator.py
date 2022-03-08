@@ -1,6 +1,6 @@
 from grammars import Grammar
 from llparser import Parser
-from mymath import add, sub, mul, mod
+from mymath import add, sub, mul, mod, div
 
 
 parser = Parser(
@@ -12,10 +12,12 @@ parser = Parser(
             ("binary operation", ("substraction",)),
             ("binary operation", ("multiplication",)),
             ("binary operation", ("modulo",)),
+            ("binary operation", ("division",)),
             ("addition", ("+", " ", "expression", " ", "expression")),
             ("substraction", ("-", " ", "expression", " ", "expression")),
             ("multiplication", ("*", " ", "expression", " ", "expression")),
             ("modulo", ("%", " ", "expression", " ", "expression")),
+            ("division", ("/", " ", "expression", " ", "expression")),
             ("digits", ("digit", "digits_rest")),
             ("digits_rest", ("digit", "digits_rest")),
             ("digits_rest", ()),
@@ -53,6 +55,7 @@ operations = {
     "substraction": sub,
     "multiplication": mul,
     "modulo": mod,
+    "division": div,
 }
 
 
