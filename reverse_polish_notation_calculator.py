@@ -1,6 +1,6 @@
 from grammars import Grammar
 from llparser import Parser
-from operator import add, sub, mul, mod
+from mymath import add, sub, mul, mod
 
 
 parser = Parser(
