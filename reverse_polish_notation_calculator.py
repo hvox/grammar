@@ -1,6 +1,6 @@
 from grammars import Grammar
 from llparser import Parser
-from mymath import add, sub, mul, mod, div
+from mymath import Rational, add, sub, mul, mod, div
 
 
 parser = Parser(
@@ -45,7 +45,7 @@ def idy(argument):
 
 
 def parse_digits(digit, rest):
-    return ("number", int(digit + rest))
+    return ("number", Rational(digit + rest))
 
 
 parser.actions = {"digits_rest": cat, "digits": parse_digits, "digit": idy}
