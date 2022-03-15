@@ -5,11 +5,11 @@ from string import digits, ascii_letters, ascii_lowercase
 identifier_chars = set(digits + ascii_letters + '_$')
 
 class Tokens(enum.Enum):
-    comment = 0
-    number = 1
-    keyword = 2
-    identifier = 3
-    newline = 4
+    comment = enum.auto()
+    number = enum.auto()
+    keyword = enum.auto()
+    identifier = enum.auto()
+    newline = enum.auto()
 
 
 def join(it, delimiter=None):
