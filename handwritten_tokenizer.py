@@ -1,5 +1,6 @@
 import enum
 from functools import cache
+from itertools import islice
 from string import digits, ascii_letters, ascii_lowercase
 identifier_chars = set(digits + ascii_letters + '_$')
 
@@ -69,3 +70,40 @@ def parse(source, keywords={}):
         tokens.append(join(code) + comment)
     #print('tokens:', tokens)
     return join(tokens, [(Tokens.newline, '\n')])
+
+def ascii_lowercase_words():
+    yield from ascii_lowercase
+    for word in ascii_lowercase_words():
+        for letter in ascii_lowercase:
+            yield word + letter
+
+def minificate(tokens):
+    ignored_tokens = {Tokens.comment, Tokens.newline}
+    tokens = [t for t in tokens if t[0] not in ignored_tokens]
+    identifiers = {}
+    for t, name in tokens:
+        if t == Tokens.identifier:
+            if name not in identifiers:
+                identifiers[name] = len(identifiers)
+    new_identifiers = list(islice(ascii_lowercase_words(), len(identifiers)))
+    for name, i in list(identifiers.items()):
+        identifiers[name] = new_identifiers[i]
+    for i, t in enumerate(tokens):
+        if t[0] == Tokens.identifier:
+            tokens[i] = (Tokens.identifier, identifiers[t[1]])
+    return tokens
+
+def tokens_to_str(tokens, keywords):
+    result = []
+    for t in reversed(tokens):
+        if len(result) == 0:
+            result.append([t])
+            continue
+        y0 = parse(t[1] + ''.join(map(lambda x: x[1], result[-1])), keywords)
+        y1 = [t] + result[-1]
+        #print('res:', t, '-', *map(ff, result))
+        if y0 == y1:
+            result[-1] = y0
+        else:
+            result.append([t])
+    return ' '.join(''.join(t[1] for t in w) for w in reversed(result))
