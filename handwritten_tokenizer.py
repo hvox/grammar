@@ -93,6 +93,11 @@ def minificate(tokens):
             tokens[i] = (Tokens.identifier, identifiers[t[1]])
     return tokens
 
+def ff(tokens):
+    if tokens is None:
+        return 'NONE'
+    return ':'.join(repr(t[1]) for t in tokens)
+
 def tokens_to_str(tokens, keywords):
     result = []
     for t in reversed(tokens):
@@ -102,6 +107,7 @@ def tokens_to_str(tokens, keywords):
         y0 = parse(t[1] + ''.join(map(lambda x: x[1], result[-1])), keywords)
         y1 = [t] + result[-1]
         #print('res:', t, '-', *map(ff, result))
+        #print(ff(y0), ff(y1))
         if y0 == y1:
             result[-1] = y0
         else:
