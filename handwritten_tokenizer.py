@@ -104,12 +104,6 @@ def minificate(tokens, keywords):
     return list(map(f, tokens))
 
 
-def ff(tokens):
-    if tokens is None:
-        return "NONE"
-    return ":".join(repr(t[1]) for t in tokens)
-
-
 def tokens_to_str(tokens, keywords):
     result = [(Tokens.newline, "\n")]
     for t in tokens:
