@@ -62,11 +62,13 @@ def parse(source, keywords={}, offset=0):
     tokens = []
     while offset < len(source):
         if source[offset] in " \n":
-            offset += 1
             if source[offset] == "\n":
                 tokens.append((Tokens.newline, "\n"))
+            offset += 1
         else:
             token, offset = parse_token(source, keywords, offset)
+            if not token:
+                return None
             tokens.append(token)
     return tokens
 
