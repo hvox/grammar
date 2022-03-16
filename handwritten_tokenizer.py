@@ -111,17 +111,9 @@ def ff(tokens):
 
 
 def tokens_to_str(tokens, keywords):
-    result = []
-    for t in reversed(tokens):
-        if len(result) == 0:
-            result.append([t])
-            continue
-        y0 = parse(t[1] + "".join(map(lambda x: x[1], result[-1])), keywords)
-        y1 = [t] + result[-1]
-        # print('res:', t, '-', *map(ff, result))
-        # print(ff(y0), ff(y1))
-        if y0 == y1:
-            result[-1] = y0
-        else:
-            result.append([t])
-    return " ".join("".join(t[1] for t in w) for w in reversed(result))
+    result = [(Tokens.newline, "\n")]
+    for t in tokens:
+        if parse(result[-1][1] + t[1], keywords) != [result[-1], t]:
+            result.append((None, " "))
+        result.append(t)
+    return "".join(t[1] for t in result)
