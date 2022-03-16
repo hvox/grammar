@@ -37,46 +37,63 @@ def split(s, delimiter):
         yield s[j : len(s)]
 
 
-def parse_token(src, keywords):
-    if src in keywords:
-        return (Tokens.keyword, src)
-    if all(c in digits for c in src):
-        return (Tokens.number, src)
-    if src[0] not in digits and all(c in identifier_chars for c in src):
-        return (Tokens.identifier, src)
-    return None
+def parse_number(source, keywords={}, offset=0):
+    j = offset
+    while j < len(source) and source[j] in digits:
+        j += 1
+    if j > offset:
+        return (Tokens.number, source[offset:j]), j
+    return None, offset
 
 
-@cache
-def parse_word(src, keywords):
-    token = parse_token(src, keywords)
-    if token is not None:
-        return [token]
-    for i in range(len(src) - 1, 0, -1):
-        left = parse_token(src[:i], keywords)
-        right = parse_word(src[i:], keywords)
-        if left is not None and right is not None:
-            return [left] + right
-    return None
+def parse_word(source, keywords={}, offset=0):
+    j = offset
+    if j >= len(source) or source[j] in digits:
+        return None, offset
+    while j < len(source) and source[j] in identifier_chars:
+        j += 1
+    if j > offset:
+        return (Tokens.identifier, source[offset:j]), j
+    return None, offset
 
 
-def parse(source, keywords={}):
-    keywords = frozenset(keywords)
-    parse = lambda source: list(parse_word(source, keywords))
+def parse_keyword(source, keywords={}, offset=0):
+    for n, keyword in reversed(sorted((len(kw), kw) for kw in keywords)):
+        if offset + n > len(source) or source[offset : offset + n] != keyword:
+            continue
+        return (Tokens.keyword, keyword), offset + n
+    return None, offset
+
+
+def parse_comment(source, keywords={}, offset=0):
+    j = offset
+    if j >= len(source) or source[j] != "#":
+        return None, offset
+    while j < len(source) and source[j] != "\n":
+        j += 1
+    return (Tokens.comment, source[offset:j]), j
+
+
+def parse_token(source, keywords={}, offset=0):
+    best_offset, result = 0, None
+    for parser in (parse_keyword, parse_number, parse_word, parse_comment):
+        token, new_offset = parser(source, keywords, offset)
+        if new_offset > best_offset:
+            best_offset, result = new_offset, token
+    return result, best_offset
+
+
+def parse(source, keywords={}, offset=0):
     tokens = []
-    # print(source, '-->', list(split(source, '\n')), source.split('\n'))
-    for line in source.split("\n"):
-        # print('!:', repr(line))
-        code, comment = line, []
-        if "#" in line:
-            code, comment = line.split("#", 1)
-            comment = [(Tokens.comment, "#" + comment)]
-        code = list(map(parse, code.strip().split(" "))) if code else []
-        if any(t is None for t in code):
-            return None
-        tokens.append(join(code) + comment)
-    # print('tokens:', tokens)
-    return join(tokens, [(Tokens.newline, "\n")])
+    while offset < len(source):
+        if source[offset] in " \n":
+            offset += 1
+            if source[offset] == "\n":
+                tokens.append((Tokens.newline, "\n"))
+        else:
+            token, offset = parse_token(source, keywords, offset)
+            tokens.append(token)
+    return tokens
 
 
 def ascii_lowercase_words():
