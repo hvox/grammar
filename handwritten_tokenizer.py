@@ -86,6 +86,12 @@ def ascii_lowercase_words():
             yield word + letter
 
 
+def skip(it, prohibited_words):
+    for elem in it:
+        if elem not in prohibited_words:
+            yield elem
+
+
 def ordered_set(it):
     result, visited = [], set()
     for value in it:
@@ -95,13 +101,12 @@ def ordered_set(it):
     return result
 
 
-def minificate(tokens):
+def minificate(tokens, keywords):
     ignored_tokens = {Tokens.comment, Tokens.newline}
     tokens = [t for t in tokens if t[0] not in ignored_tokens]
     identifiers = ordered_set(n for t, n in tokens if t == Tokens.identifier)
-    new_identifiers = list(islice(ascii_lowercase_words(), len(identifiers)))
-    identifiers = dict(zip(list((identifiers)), new_identifiers))
-    f = lambda t: (t[0], identifiers[t[1]]) if t[0] == Tokens.identifier else t
+    new_names = dict(zip(identifiers, skip(ascii_lowercase_words(), keywords)))
+    f = lambda t: (t[0], new_names[t[1]]) if t[0] == Tokens.identifier else t
     return list(map(f, tokens))
 
 
