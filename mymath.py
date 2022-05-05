@@ -17,7 +17,7 @@ def mod(x, y):
     return x % abs(y)
 
 
-def floor_div(x, y):
+def euclidean_div(x, y):
     return x // abs(y) * sign(y)
 
 
