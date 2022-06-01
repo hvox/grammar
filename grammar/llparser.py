@@ -1,6 +1,6 @@
-from lookaheaditerators import LookAheadIterator
+from .lookaheaditerators import LookAheadIterator
 from dataclasses import dataclass, field
-from grammars import Grammar, ε, τ
+from grammar import Grammar, ε, τ
 from typing import Any
 
 

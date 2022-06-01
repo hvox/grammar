@@ -1,7 +1,8 @@
+import context
 import pytest
 from collections import defaultdict
-from grammars import Grammar, ε, τ
-from llparser import construct_table, Parser
+from grammar import Grammar, ε, τ
+from grammar.llparser import construct_table, Parser
 
 
 @pytest.fixture

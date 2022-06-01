@@ -1,5 +1,6 @@
+import context
 import pytest
-from grammars import Grammar, ε, τ
+from grammar import Grammar, ε, τ
 
 
 @pytest.fixture

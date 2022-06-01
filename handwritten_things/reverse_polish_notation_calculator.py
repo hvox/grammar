@@ -1,5 +1,8 @@
-from grammars import Grammar
-from llparser import Parser
+import os
+import sys
+sys.path.insert(1, os.path.join(sys.path[0], '..'))
+from grammar import Grammar
+from grammar.llparser import Parser
 from mymath import Rational, add, sub, mul, mod, div
 
 
