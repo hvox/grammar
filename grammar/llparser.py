@@ -6,7 +6,7 @@ from typing import Any
 
 def construct_table(grammar):
     nonterminals, terminals = grammar.variables, grammar.terminals
-    followers, prefixes = grammar.followers(), grammar.prefixes()
+    followers, prefixes = grammar.followers, grammar.prefixes
     rules = grammar.rules
     table = {}
     for i, rule in enumerate(rules):

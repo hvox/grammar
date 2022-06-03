@@ -15,7 +15,7 @@ def grammar():
 
 
 def test_followers(grammar):
-    assert grammar.followers() == {"S": {"PLUS", τ}, "F": {"CLOSE", "PLUS", τ}}
+    assert grammar.followers == {"S": {"PLUS", τ}, "F": {"CLOSE", "PLUS", τ}}
 
 
 def test_hashing(grammar):
@@ -34,7 +34,7 @@ def test_serialization(grammar):
 
 
 def test_prefixes(grammar):
-    assert grammar.prefixes() == {
+    assert grammar.prefixes == {
         "S": {"a", "OPEN"},
         "F": {"a"},
         (): {ε},

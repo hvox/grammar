@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import Any
+from functools import cache
 
 ε = object()  # empty sequence of tokens
 τ = object()  # end of the input
@@ -7,12 +8,10 @@ from typing import Any
 
 @dataclass
 class Grammar:
-    variables: {str}
-    terminals: {Any}
+    variables: frozenset[str]
+    terminals: frozenset[Any]
     rules: tuple[(str, tuple[Any])]
     start: str
-    cached_prefixes: {str: {Any}} = None
-    cached_followers: {str: {Any}} = None
 
     def __init__(self, rules):
         self.rules = tuple(rules)
@@ -23,14 +22,9 @@ class Grammar:
     def __repr__(self):
         return f"Grammar({self.rules})"
 
-    def prefixes(self, nonterminal=None):
-        if self.cached_prefixes is None:
-            self.update_prefixes()
-        if nonterminal is None:
-            return self.cached_prefixes
-        return self.cached_prefixes[nonterminal]
-
-    def update_prefixes(self):
+    @property
+    @cache
+    def prefixes(self):
         prefixes = {nt: set() for nt in self.variables}
 
         def get_prefixes(seq):
@@ -51,22 +45,17 @@ class Grammar:
                     prefixes[nt].add(first)
                     anything_has_changed = True
             if not anything_has_changed:
-                prefixes[()] = {ε}
-                for _, seq in self.rules:
-                    for i in range(len(seq)):
-                        prefixes[seq[i:]] = get_prefixes(seq[i:])
-                self.cached_prefixes = prefixes
-                return
+                break
+        prefixes[()] = {ε}
+        for _, seq in self.rules:
+            for i in range(len(seq)):
+                prefixes[seq[i:]] = get_prefixes(seq[i:])
+        return prefixes
 
-    def followers(self, nonterminal=None):
-        if self.cached_followers is None:
-            self.update_followers()
-        if nonterminal is None:
-            return self.cached_followers
-        return self.cached_followers[nonterminal]
-
-    def update_followers(self):
-        prefixes = self.prefixes()
+    @property
+    @cache
+    def followers(self):
+        prefixes = self.prefixes
         followers = {nt: set() for nt in self.variables}
         followers[next(iter(self.rules))[0]] = {τ}
 
@@ -92,8 +81,8 @@ class Grammar:
                         updated = True
                         followers[nt].add(t)
             if not updated:
-                self.cached_followers = followers
-                return
+                break
+        return followers
 
     def __eq__(u, v):
         return u.rules == v.rules
