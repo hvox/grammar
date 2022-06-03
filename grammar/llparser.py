@@ -7,7 +7,7 @@ from typing import Any
 def construct_table(grammar):
     nonterminals, terminals = grammar.variables, grammar.terminals
     followers, prefixes = grammar.followers, grammar.prefixes
-    rules = grammar.rules
+    rules = tuple(((nt, seq) for (nt, seqs) in grammar.rules.items() for seq in seqs))
     table = {}
     for i, rule in enumerate(rules):
         nonterminal, body = rule
@@ -32,12 +32,14 @@ class Parser:
         self.actions = actions
 
     def parse_symbol(self, source, symbol):
-        rules, table = self.grammar.rules, self.table
+        table = self.table
+        rules = tuple(((nt, seq) for (nt, seqs) in self.grammar.rules.items() for seq in seqs))
         if symbol in self.grammar.terminals:
             if symbol != source.next:
                 raise SyntaxError(f"Expected {symbol}")
             return next(source)
         state = (symbol, source.next)
+        print(state)
         if state not in table:
             raise SyntaxError(f"Unexpected token: {source.next}")
         rule = rules[table[state]][1]
@@ -45,7 +47,7 @@ class Parser:
         return self.actions.get(symbol, lambda *f: (symbol, f))(*fields)
 
     def parse(self, source, symbol=None):
-        symbol = symbol if symbol is not None else self.grammar.rules[0][0]
+        symbol = symbol if symbol is not None else self.grammar.start
         if not (isinstance(source, LookAheadIterator)):
             source = LookAheadIterator(source, end=τ)
         return self.parse_symbol(source, symbol)

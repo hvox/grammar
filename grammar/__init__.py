@@ -1,26 +1,24 @@
 from dataclasses import dataclass
 from typing import Any
 from functools import cache
+from frozendict import frozendict
 
 ε = object()  # empty sequence of tokens
 τ = object()  # end of the input
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class Grammar:
     variables: frozenset[str]
     terminals: frozenset[Any]
-    rules: tuple[(str, tuple[Any])]
+    rules: frozendict[str, frozenset[tuple[Any]]]
     start: str
 
-    def __init__(self, rules):
-        self.rules = tuple(rules)
-        self.variables = {nt for nt, _ in rules}
-        symbols = {s for _, seq in rules for s in seq}
-        self.terminals = {t for t in symbols if t not in self.variables}
-
-    def __repr__(self):
-        return f"Grammar({self.rules})"
+    def __init__(self, variables, terminals, rules, start):
+        self.variables = frozenset(variables)
+        self.terminals = frozenset(terminals)
+        self.rules = frozendict({v: frozenset(seq) for v, seq in rules.items()})
+        self.start = start
 
     @property
     @cache
@@ -38,7 +36,7 @@ class Grammar:
 
         while True:
             anything_has_changed = False
-            for nt, seq in self.rules:
+            for nt, seq in ((v, s) for v, seqs in self.rules.items() for s in seqs):
                 for first in get_prefixes(seq):
                     if first in prefixes[nt]:
                         continue
@@ -47,7 +45,7 @@ class Grammar:
             if not anything_has_changed:
                 break
         prefixes[()] = {ε}
-        for _, seq in self.rules:
+        for seq in (s for _, seqs in self.rules.items() for s in seqs):
             for i in range(len(seq)):
                 prefixes[seq[i:]] = get_prefixes(seq[i:])
         return prefixes
@@ -57,11 +55,11 @@ class Grammar:
     def followers(self):
         prefixes = self.prefixes
         followers = {nt: set() for nt in self.variables}
-        followers[next(iter(self.rules))[0]] = {τ}
+        followers[self.start] = {τ}
 
         while True:
             updates = []
-            for nt1, seq in self.rules:
+            for nt1, seq in ((v, s) for v, seqs in self.rules.items() for s in seqs):
                 for i, s in enumerate(seq):
                     if s in self.terminals:
                         continue
@@ -86,6 +84,3 @@ class Grammar:
 
     def __eq__(u, v):
         return u.rules == v.rules
-
-    def __hash__(self):
-        return hash(self.rules)

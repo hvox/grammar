@@ -8,17 +8,16 @@ from grammar.llparser import construct_table, Parser
 @pytest.fixture
 def grammar():
     return Grammar(
-        [
-            ("S", ("F",)),
-            ("S", ("OPEN", "S", "PLUS", "F", "CLOSE")),
-            ("F", ("a",)),
-        ]
+        {"S", "F"},
+        {"OPEN", "PLUS", "CLOSE", "a"},
+        {"S": {("F",), ("OPEN", "S", "PLUS", "F", "CLOSE")}, "F": {("a",)}},
+        "S",
     )
 
 
 def test_table_construction(grammar):
     table = construct_table(grammar)
-    assert table == {("S", "a"): 0, ("S", "OPEN"): 1, ("F", "a"): 2}
+    assert table.keys() == {("S", "a"), ("S", "OPEN"), ("F", "a")}
 
 
 def test_the_parser(grammar):
@@ -28,21 +27,28 @@ def test_the_parser(grammar):
 
 def test_parse_sum():
     grm = Grammar(
-        [
-            ("S", ("T",)),
-            ("S", (ord("("), "S", ord("+"), "S", ord(")"))),
-            ("T", (ord("0"), "T")),
-            ("T", (ord("1"), "T")),
-            ("T", (ord("2"), "T")),
-            ("T", (ord("3"), "T")),
-            ("T", (ord("4"), "T")),
-            ("T", (ord("5"), "T")),
-            ("T", (ord("6"), "T")),
-            ("T", (ord("7"), "T")),
-            ("T", (ord("8"), "T")),
-            ("T", (ord("9"), "T")),
-            ("T", ()),
-        ]
+        {"S", "T"},
+        set(map(ord, "(+)0123456789")),
+        {
+            "S": {
+                ("T",),
+                (ord("("), "S", ord("+"), "S", ord(")")),
+            },
+            "T": {
+                (),
+                (ord("0"), "T"),
+                (ord("1"), "T"),
+                (ord("2"), "T"),
+                (ord("3"), "T"),
+                (ord("4"), "T"),
+                (ord("5"), "T"),
+                (ord("6"), "T"),
+                (ord("7"), "T"),
+                (ord("8"), "T"),
+                (ord("9"), "T"),
+            },
+        },
+        "S",
     )
 
     def parse_sum(*args):
