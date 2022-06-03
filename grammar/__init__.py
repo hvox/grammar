@@ -19,6 +19,16 @@ class Grammar:
         self.terminals = frozenset(terminals)
         self.rules = frozendict({v: frozenset(seq) for v, seq in rules.items()})
         self.start = start
+        print(self.variables, self.terminals)
+        assert not self.variables.intersection(self.terminals)
+        assert set(self.rules.keys()).issubset(self.variables)
+        for variable, bodies in self.rules.items():
+            for body in bodies:
+                for symbol in body:
+                    if symbol in self.variables:
+                        assert symbol in self.rules
+                    else:
+                        assert symbol in self.terminals
 
     @property
     @cache
