@@ -64,6 +64,6 @@ def test_parse_sum():
 def test_actions(grammar):
     parser = Parser(grammar)
     parser.actions = {
-        symbol: (lambda *a: len(a) + 1) for symbol in grammar.nonterminals
+        symbol: (lambda *a: len(a) + 1) for symbol in grammar.variables
     }
     assert parser.parse(["OPEN", "a", "PLUS", "a", "CLOSE"]) == 6

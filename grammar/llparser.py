@@ -5,7 +5,7 @@ from typing import Any
 
 
 def construct_table(grammar):
-    nonterminals, terminals = grammar.nonterminals, grammar.terminals
+    nonterminals, terminals = grammar.variables, grammar.terminals
     followers, prefixes = grammar.followers(), grammar.prefixes()
     rules = grammar.rules
     table = {}

@@ -7,17 +7,18 @@ from typing import Any
 
 @dataclass
 class Grammar:
-    rules: ((str, (Any,)),)
+    variables: {str}
     terminals: {Any}
-    nonterminals: {str}
+    rules: tuple[(str, tuple[Any])]
+    start: str
     cached_prefixes: {str: {Any}} = None
     cached_followers: {str: {Any}} = None
 
     def __init__(self, rules):
         self.rules = tuple(rules)
-        self.nonterminals = {nt for nt, _ in rules}
+        self.variables = {nt for nt, _ in rules}
         symbols = {s for _, seq in rules for s in seq}
-        self.terminals = {t for t in symbols if t not in self.nonterminals}
+        self.terminals = {t for t in symbols if t not in self.variables}
 
     def __repr__(self):
         return f"Grammar({self.rules})"
@@ -30,7 +31,7 @@ class Grammar:
         return self.cached_prefixes[nonterminal]
 
     def update_prefixes(self):
-        prefixes = {nt: set() for nt in self.nonterminals}
+        prefixes = {nt: set() for nt in self.variables}
 
         def get_prefixes(seq):
             if len(seq) == 0:
@@ -66,7 +67,7 @@ class Grammar:
 
     def update_followers(self):
         prefixes = self.prefixes()
-        followers = {nt: set() for nt in self.nonterminals}
+        followers = {nt: set() for nt in self.variables}
         followers[next(iter(self.rules))[0]] = {τ}
 
         while True:
