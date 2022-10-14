@@ -128,6 +128,8 @@ class Grammar:
                         raise Exception("Conflict!")
                     print(item_set, "+", repr(terminal), "->", item_sets[j])
                     actions[i, terminal] = ("shift", j)
+            # TODO: fix bug!
+            # BUG: here we should use closures instead of core items!
             for head, j, *body in item_set:
                 if j != len(body):
                     continue
