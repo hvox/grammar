@@ -90,6 +90,61 @@ class Grammar:
                     table[head, term] = (head, body)
         return table
 
+    def construct_slr_parsing_table(self):
+        item_sets = [{(None, 1, None, self.start, None)}]
+        gotos = {}
+        for i, item_set in enumerate(map(set, item_sets)):
+            done = False
+            while not done:
+                done = True
+                for head, j, *body in list(item_set):
+                    if j >= len(body) or body[j] not in self.variables:
+                        continue
+                    next_symbol = body[j]
+                    for head, body in self.rules:  # TODO: optimize by per-head rules
+                        if head == next_symbol:
+                            item = (head, 0) + tuple(body)
+                            if item not in item_set:
+                                item_set.add(item)
+                                done = False
+            for next_symbol in self.symbols:
+                next_set = {
+                    (head, i + 1) + tuple(body)
+                    for head, i, *body in item_set
+                    if i < len(body) and body[i] == next_symbol
+                }
+                if next_set:
+                    if next_set not in item_sets:
+                        j = len(item_sets)
+                        item_sets.append(next_set)
+                    else:
+                        j = item_sets.index(next_set)
+                gotos[i, next_symbol] = j
+        actions = {}
+        for i, item_set in enumerate(item_sets):
+            for terminal in self.terminals:
+                if j := gotos.get((i, terminal), 0):
+                    if (i, terminal) in actions:
+                        raise Exception("Conflict!")
+                    print(item_set, "+", repr(terminal), "->", item_sets[j])
+                    actions[i, terminal] = ("shift", j)
+            for head, j, *body in item_set:
+                if j != len(body):
+                    continue
+                elif head is None:
+                    if (i, None) in actions:
+                        raise Exception("Conflict!")
+                    actions[i, None] = "accept"
+                else:
+                    for follower in self.followers[head]:
+                        if (i, follower) in actions:
+                            print(item_set)
+                            print(i, follower, "->", actions[i, follower])
+                            print(i, follower, "->", ("reduce", head, body))
+                            raise Exception("Conflict!")
+                        actions[i, follower] = ("reduce", head, body)
+        return actions
+
 
 rules = set(
     [
@@ -119,3 +174,7 @@ try:
         print(*state, " ::: ", *nexts)
 except Exception as e:
     print(e)
+
+print(" -- SLR table --")
+for state, nexts in g.construct_slr_parsing_table().items():
+    print(*state, " ::: ", *nexts)
