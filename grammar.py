@@ -70,3 +70,52 @@ class Grammar:
                         else self.prefixes[symbol]
                     )
         return followers
+
+    def construct_ll1_parsing_table(self):
+        table = {}
+        for head, body in self.rules:
+            body_prefixes = reduce(
+                lambda u, v: u | v - {None} if None in v else v,
+                [self.prefixes[s] for s in reversed(body)],
+                set([None]),
+            )
+            for term in body_prefixes & self.terminals:
+                if (head, term) in table:
+                    raise Exception("Conflict!")
+                table[head, term] = (head, body)
+            if all(None in self.prefixes[symbol] for symbol in body):
+                for term in self.followers[head]:
+                    if (head, term) in table:
+                        raise Exception("Conflict!")
+                    table[head, term] = (head, body)
+        return table
+
+
+rules = set(
+    [
+        ("E", ("T", "E'")),
+        ("E'", ("+", "T", "E'")),
+        ("E'", ()),
+        ("T", ("F", "T'")),
+        ("T'", ("*", "F", "T'")),
+        ("T'", ()),
+        ("F", ("(", "E", ")")),
+        ("F", ("id",)),
+    ]
+)
+
+g = Grammar(rules)
+print(" -- prefixes --")
+for symbol, prefexes in g.prefixes.items():
+    print(symbol, " ::: ", " ".join(map(str, prefexes)))
+
+print(" -- followers --")
+for symbol, followers in g.followers.items():
+    print(symbol, " ::: ", " ".join(map(str, followers)))
+
+print(" -- LL(1) table --")
+try:
+    for state, nexts in g.construct_ll1_parsing_table().items():
+        print(*state, " ::: ", *nexts)
+except Exception as e:
+    print(e)
