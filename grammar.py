@@ -119,36 +119,41 @@ class Grammar:
                         item_sets.append(next_set)
                     else:
                         j = item_sets.index(next_set)
-                gotos[i, next_symbol] = j
+                    gotos[i, next_symbol] = j
         actions = {}
-        for i, item_set in enumerate(item_sets):
+        for i, item_set in enumerate(map(set, item_sets)):
+            done = False
+            while not done:
+                done = True
+                for head, j, *body in list(item_set):
+                    if j >= len(body) or body[j] not in self.variables:
+                        continue
+                    next_symbol = body[j]
+                    for head, body in self.rules:  # TODO: optimize by per-head rules
+                        if head == next_symbol:
+                            item = (head, 0) + tuple(body)
+                            if item not in item_set:
+                                item_set.add(item)
+                                done = False
             for terminal in self.terminals:
                 if j := gotos.get((i, terminal), 0):
                     if (i, terminal) in actions:
                         raise Exception("Conflict!")
-                    print(item_set, "+", repr(terminal), "->", item_sets[j])
                     actions[i, terminal] = ("shift", j)
-            # TODO: fix bug!
-            # BUG: here we should use closures instead of core items!
             for head, j, *body in item_set:
-                if j != len(body):
-                    continue
-                elif head is None:
+                if head is None and body[j] is None:
                     if (i, None) in actions:
                         raise Exception("Conflict!")
-                    actions[i, None] = "accept"
-                else:
+                    actions[i, None] = ("accept",)
+                elif j == len(body):
                     for follower in self.followers[head]:
                         if (i, follower) in actions:
-                            print(item_set)
-                            print(i, follower, "->", actions[i, follower])
-                            print(i, follower, "->", ("reduce", head, body))
                             raise Exception("Conflict!")
                         actions[i, follower] = ("reduce", head, body)
         return actions
 
 
-rules = set(
+rules_for_ll1 = set(
     [
         ("E", ("T", "E'")),
         ("E'", ("+", "T", "E'")),
@@ -160,6 +165,17 @@ rules = set(
         ("F", ("id",)),
     ]
 )
+
+rules_for_slr = [
+    ("E", ("E", "+", "T")),
+    ("E", ("T",)),
+    ("T", ("T", "*", "F")),
+    ("T", ("F",)),
+    ("F", ("(", "E", ")")),
+    ("F", ("id",)),
+]
+
+rules = rules_for_ll1
 
 g = Grammar(rules)
 print(" -- prefixes --")
