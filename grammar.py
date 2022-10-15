@@ -91,6 +91,7 @@ class Grammar:
         return table
 
     def construct_slr_parsing_table(self):
+        # TODO: simplify this method by splitting into functions
         item_sets = [{(None, 1, None, self.start, None)}]
         gotos = {}
         for i, item_set in enumerate(map(set, item_sets)):
@@ -107,6 +108,7 @@ class Grammar:
                             if item not in item_set:
                                 item_set.add(item)
                                 done = False
+            # TODO: use more efficient way to find next sets
             for next_symbol in self.symbols:
                 next_set = {
                     (head, i + 1) + tuple(body)
@@ -149,10 +151,12 @@ class Grammar:
                     for follower in self.followers[head]:
                         if (i, follower) in actions:
                             raise Exception("Conflict!")
+                        # TODO: use rule numbers instead of the rules themself
                         actions[i, follower] = ("reduce", head, body)
         return actions
 
 
+# TODO: use pytest for tests
 rules_for_ll1 = set(
     [
         ("E", ("T", "E'")),
