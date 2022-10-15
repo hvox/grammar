@@ -155,6 +155,7 @@ class Grammar:
                             raise Exception("Conflict!")
                         # TODO: use rule numbers instead of the rules themself
                         actions[i, follower] = ("reduce", head, body)
+        # TODO: we also should return the goto table for variables
         return actions
 
 
