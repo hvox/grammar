@@ -92,7 +92,7 @@ class Grammar:
 
     def construct_slr_parsing_table(self):
         # TODO: simplify this method by splitting into functions
-        item_sets = [{(None, 1, None, self.start, None)}]
+        item_sets = [{(None, 0, self.start)}]
         gotos = {}
         for i, item_set in enumerate(map(set, item_sets)):
             done = False
@@ -143,11 +143,13 @@ class Grammar:
                         raise Exception("Conflict!")
                     actions[i, terminal] = ("shift", j)
             for head, j, *body in item_set:
-                if head is None and body[j] is None:
+                if j != len(body):
+                    continue
+                elif head is None:
                     if (i, None) in actions:
                         raise Exception("Conflict!")
                     actions[i, None] = ("accept",)
-                elif j == len(body):
+                else:
                     for follower in self.followers[head]:
                         if (i, follower) in actions:
                             raise Exception("Conflict!")
@@ -179,7 +181,7 @@ rules_for_slr = [
     ("F", ("id",)),
 ]
 
-rules = rules_for_ll1
+rules = rules_for_slr
 
 g = Grammar(rules)
 print(" -- prefixes --")
