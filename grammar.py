@@ -155,8 +155,8 @@ class Grammar:
                             raise Exception("Conflict!")
                         # TODO: use rule numbers instead of the rules themself
                         actions[i, follower] = ("reduce", head, body)
-        # TODO: we also should return the goto table for variables
-        return actions
+        gotos = {(i, ch): j for (i, ch), j in gotos.items() if ch in self.variables}
+        return actions, gotos
 
     def construct_clr_parsing_table(self):
         def closure(core_items):
@@ -272,7 +272,7 @@ except Exception as e:
     print(e)
 
 print(" -- SLR table --")
-for state, nexts in g.construct_slr_parsing_table().items():
+for state, nexts in g.construct_slr_parsing_table()[0].items():
     print(*state, " ::: ", *nexts)
 
 print(" -- CLR table --")
