@@ -1,4 +1,4 @@
-from grammar import Grammar
+from grammar import Grammar, Rule
 
 
 def test_ll1_table_generation():
@@ -94,14 +94,14 @@ def test_clr_table_generation():
         (2, "d"): ("shift", 7),
         (3, "c"): ("shift", 3),
         (3, "d"): ("shift", 4),
-        (4, "d"): ("reduce", "C", ["d"]),
-        (4, "c"): ("reduce", "C", ["d"]),
-        (5, None): ("reduce", "S", ["C", "C"]),
+        (4, "d"): ("reduce", Rule(head="C", body=("d",))),
+        (4, "c"): ("reduce", Rule(head="C", body=("d",))),
+        (5, None): ("reduce", Rule(head="S", body=("C", "C"))),
         (6, "c"): ("shift", 6),
         (6, "d"): ("shift", 7),
-        (7, None): ("reduce", "C", ["d"]),
-        (8, "c"): ("reduce", "C", ["c", "C"]),
-        (8, "d"): ("reduce", "C", ["c", "C"]),
-        (9, None): ("reduce", "C", ["c", "C"]),
+        (7, None): ("reduce", Rule(head="C", body=("d",))),
+        (8, "d"): ("reduce", Rule(head="C", body=("c", "C"))),
+        (8, "c"): ("reduce", Rule(head="C", body=("c", "C"))),
+        (9, None): ("reduce", Rule(head="C", body=("c", "C"))),
     }
     assert Grammar(rules).construct_clr_parsing_table()[0] == table

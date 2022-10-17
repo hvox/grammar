@@ -1,10 +1,20 @@
 from lib.deterministic import DeterministicSet as set
 from functools import cached_property, reduce
-from typing import Iterable
+from typing import Iterable, NamedTuple
+from contextlib import suppress
+
+Rule = NamedTuple("Rule", head=str, body=tuple[str])
+
+
+def push_if_not_in(xs: list, x):
+    with suppress(ValueError):
+        return xs.index(x)
+    xs.append(x)
+    return len(xs) - 1
 
 
 class Grammar:
-    rules: set[tuple[str, tuple[str, ...]]]
+    rules: set[Rule]
     variables: set[str]
     terminals: set[str]
     symbols: set[str]  # TODO: make symbol property
@@ -17,7 +27,7 @@ class Grammar:
         terminals: Iterable[str] | None = None,
         start: str | None = None,
     ):
-        self.rules = set(rules)
+        self.rules = set(Rule(head, body) for head, body in rules)
         self.start = start if start is not None else next(iter(self.rules))[0]
         self.variables = (
             set(variables) if variables is not None else set(head for head, _ in self.rules)
@@ -159,62 +169,54 @@ class Grammar:
         return actions, gotos
 
     def construct_clr_parsing_table(self):
-        def closure(core_items):
+        Item = NamedTuple("Item", dot=int, rule=Rule, follower=str)
+
+        def closure(core_items: set[Item]) -> set[Item]:
             # TODO: Is it ok to define functions inside functions?
             # https://stackoverflow.com/a/38937898
             item_set = set(core_items)  # TODO: use some cool datastructure for queues
             done = False
             while not done:
                 done = True  # TODO: optimize by using queue instead of flags
-                for head, j, *body, follower in list(item_set):
-                    if j >= len(body) or body[j] not in self.variables:
+                for i, item_rule, follower in list(item_set):
+                    if i == len(item_rule.body) or item_rule.body[i] not in self.variables:
                         continue
-                    next_symbol = body[j]
-                    for head, rule_body in self.rules:  # TODO: optimize by per-head rules
-                        if head != next_symbol:
-                            continue
+                    next_symbol = item_rule.body[i]
+                    # TODO: optimize by per-head rules
+                    for rule in filter(lambda r: r.head == next_symbol, self.rules):
                         followers = reduce(
                             lambda x, y: y - {None} | x if None in y else y,
-                            map(self.prefixes.get, reversed(body[j+1:])), {follower}
+                            map(self.prefixes.get, reversed(item_rule.body[i+1:])), {follower}
                         )
-                        for inner_follower in followers:
-                            item = (head, 0) + tuple(rule_body) + (inner_follower,)
-                            if item not in item_set:
-                                item_set.add(item)
+                        for new_item in (Item(0, rule, symbol) for symbol in followers):
+                            if new_item not in item_set:
+                                item_set.add(new_item)
                                 done = False
             return item_set
         gotos, actions = {}, {}
         # TODO: use something more appropriate for queue
-        item_sets = [{(None, 0, self.start, None)}]  # (head, dot_position, body..., follower)
+        item_sets = [{Item(0, Rule(None, (self.start,)), None)}]
         for i, item_set in enumerate(map(closure, item_sets)):
             # TODO: use more efficient way to find next sets
             for next_symbol in self.symbols:
-                next_set = {
-                    (head, i + 1) + tuple(body) + (follower,)
-                    for head, i, *body, follower in item_set
-                    if i < len(body) and body[i] == next_symbol
-                }
-                if not next_set:
-                    continue
-                if next_set not in item_sets:
-                    j = len(item_sets)
-                    item_sets.append(next_set)
-                else:
-                    j = item_sets.index(next_set)
-                gotos[i, next_symbol] = j
+                if next_set := {
+                    Item(i + 1, rule, follower) for i, rule, follower in item_set
+                    if i < len(rule.body) and rule.body[i] == next_symbol
+                }:
+                    gotos[i, next_symbol] = push_if_not_in(item_sets, next_set)
         for i, item_set in enumerate(map(closure, item_sets)):
             for terminal in self.terminals:
                 if j := gotos.get((i, terminal), 0):
                     if (i, terminal) in actions:
                         raise Exception("Conflict!")
                     actions[i, terminal] = ("shift", j)
-            for head, j, *body, follower in item_set:
-                if j != len(body):
+            for dot, rule, follower in item_set:
+                if dot != len(rule.body):
                     continue
-                elif head is not None:
+                elif rule.head is not None:
                     if (i, follower) in actions:
                         raise Exception("Conflict!")
-                    actions[i, follower] = ("reduce", head, body)
+                    actions[i, follower] = ("reduce", rule)
                 elif follower is None:
                     if (i, None) in actions:
                         raise Exception("Conflict!")
