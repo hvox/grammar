@@ -158,6 +158,71 @@ class Grammar:
         # TODO: we also should return the goto table for variables
         return actions
 
+    def construct_clr_parsing_table(self):
+        def closure(core_items):
+            # TODO: Is it ok to define functions inside functions?
+            # https://stackoverflow.com/a/38937898
+            item_set = set(core_items)  # TODO: use some cool datastructure for queues
+            done = False
+            while not done:
+                done = True  # TODO: optimize by using queue instead of flags
+                for head, j, *body, follower in list(item_set):
+                    if j >= len(body) or body[j] not in self.variables:
+                        continue
+                    next_symbol = body[j]
+                    for head, rule_body in self.rules:  # TODO: optimize by per-head rules
+                        if head != next_symbol:
+                            continue
+                        followers = reduce(
+                            lambda x, y: y - {None} | x if None in y else y,
+                            map(self.prefixes.get, reversed(body[j+1:])), {follower}
+                        )
+                        for inner_follower in followers:
+                            item = (head, 0) + tuple(rule_body) + (inner_follower,)
+                            if item not in item_set:
+                                item_set.add(item)
+                                done = False
+            return item_set
+        gotos, actions = {}, {}
+        # TODO: use something more appropriate for queue
+        item_sets = [{(None, 0, self.start, None)}]  # (head, dot_position, body..., follower)
+        for i, item_set in enumerate(map(closure, item_sets)):
+            # TODO: use more efficient way to find next sets
+            for next_symbol in self.symbols:
+                next_set = {
+                    (head, i + 1) + tuple(body) + (follower,)
+                    for head, i, *body, follower in item_set
+                    if i < len(body) and body[i] == next_symbol
+                }
+                if not next_set:
+                    continue
+                if next_set not in item_sets:
+                    j = len(item_sets)
+                    item_sets.append(next_set)
+                else:
+                    j = item_sets.index(next_set)
+                gotos[i, next_symbol] = j
+        for i, item_set in enumerate(map(closure, item_sets)):
+            for terminal in self.terminals:
+                if j := gotos.get((i, terminal), 0):
+                    if (i, terminal) in actions:
+                        raise Exception("Conflict!")
+                    actions[i, terminal] = ("shift", j)
+            for head, j, *body, follower in item_set:
+                if j != len(body):
+                    continue
+                elif head is not None:
+                    if (i, follower) in actions:
+                        raise Exception("Conflict!")
+                    actions[i, follower] = ("reduce", head, body)
+                elif follower is None:
+                    if (i, None) in actions:
+                        raise Exception("Conflict!")
+                    actions[i, None] = ("accept",)
+        gotos = {(i, ch): j for (i, ch), j in gotos.items() if ch in self.variables}
+        return actions, gotos
+
+
 
 # TODO: use pytest for tests
 rules_for_ll1 = set(
@@ -182,7 +247,13 @@ rules_for_slr = [
     ("F", ("id",)),
 ]
 
-rules = rules_for_slr
+rules_for_clr = [
+    ("S", ("C", "C")),
+    ("C", ("c", "C")),
+    ("C", ("d",)),
+]
+
+rules = rules_for_clr
 
 g = Grammar(rules)
 print(" -- prefixes --")
@@ -202,4 +273,8 @@ except Exception as e:
 
 print(" -- SLR table --")
 for state, nexts in g.construct_slr_parsing_table().items():
+    print(*state, " ::: ", *nexts)
+
+print(" -- CLR table --")
+for state, nexts in g.construct_clr_parsing_table()[0].items():
     print(*state, " ::: ", *nexts)
