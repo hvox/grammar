@@ -200,18 +200,14 @@ class Grammar:
                 }:
                     gotos[i, next_symbol] = push_if_not_in(item_sets, next_set)
         for i, item_set in enumerate(map(closure, item_sets)):
-            for terminal in self.terminals:
-                if j := gotos.get((i, terminal), 0):
-                    assert (i, terminal) not in actions, "Conflict!"
-                    actions[i, terminal] = ("shift", j)
-            for dot, rule, follower in item_set:
-                if dot != len(rule.body):
-                    continue
-                elif rule.head is not None:
-                    assert (i, follower) not in actions, "Conflict!"
-                    actions[i, follower] = ("reduce", rule)
-                elif follower is None:
+            for terminal, j in ((t, j) for t in self.terminals if (j := gotos.get((i, t)))):
+                assert (i, terminal) not in actions, "Conflict!"
+                actions[i, terminal] = ("shift", j)
+            for item in filter(lambda item: item.dot == len(item.rule.body), item_set):
+                if item.rule.head is not None:
+                    assert (i, item.follower) not in actions, "Conflict!"
+                    actions[i, item.follower] = ("reduce", item.rule)
+                elif item.follower is None:
                     assert (i, None) not in actions, "Conflict!"
                     actions[i, None] = ("accept",)
-        gotos = {(i, ch): j for (i, ch), j in gotos.items() if ch in self.variables}
-        return actions, gotos
+        return actions, {k: v for k, v in gotos.items() if k[1] in self.variables}
