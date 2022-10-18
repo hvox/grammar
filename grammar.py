@@ -90,13 +90,11 @@ class Grammar:
                 set([None]),
             )
             for term in body_prefixes & self.terminals:
-                if (head, term) in table:
-                    raise Exception("Conflict!")
+                assert (head, term) not in table, "Conflict!"
                 table[head, term] = (head, body)
             if all(None in self.prefixes[symbol] for symbol in body):
                 for term in self.followers[head]:
-                    if (head, term) in table:
-                        raise Exception("Conflict!")
+                    assert (head, term) not in table, "Conflict!"
                     table[head, term] = (head, body)
         return table
 
@@ -149,20 +147,17 @@ class Grammar:
                                 done = False
             for terminal in self.terminals:
                 if j := gotos.get((i, terminal), 0):
-                    if (i, terminal) in actions:
-                        raise Exception("Conflict!")
+                    assert (i, terminal) not in actions, "Conflict!"
                     actions[i, terminal] = ("shift", j)
             for head, j, *body in item_set:
                 if j != len(body):
                     continue
                 elif head is None:
-                    if (i, None) in actions:
-                        raise Exception("Conflict!")
+                    assert (i, None) not in actions, "Conflict!"
                     actions[i, None] = ("accept",)
                 else:
                     for follower in self.followers[head]:
-                        if (i, follower) in actions:
-                            raise Exception("Conflict!")
+                        assert (i, follower) not in actions, "Conflict!"
                         # TODO: use rule numbers instead of the rules themself
                         actions[i, follower] = ("reduce", head, body)
         gotos = {(i, ch): j for (i, ch), j in gotos.items() if ch in self.variables}
@@ -207,19 +202,16 @@ class Grammar:
         for i, item_set in enumerate(map(closure, item_sets)):
             for terminal in self.terminals:
                 if j := gotos.get((i, terminal), 0):
-                    if (i, terminal) in actions:
-                        raise Exception("Conflict!")
+                    assert (i, terminal) not in actions, "Conflict!"
                     actions[i, terminal] = ("shift", j)
             for dot, rule, follower in item_set:
                 if dot != len(rule.body):
                     continue
                 elif rule.head is not None:
-                    if (i, follower) in actions:
-                        raise Exception("Conflict!")
+                    assert (i, follower) not in actions, "Conflict!"
                     actions[i, follower] = ("reduce", rule)
                 elif follower is None:
-                    if (i, None) in actions:
-                        raise Exception("Conflict!")
+                    assert (i, None) not in actions, "Conflict!"
                     actions[i, None] = ("accept",)
         gotos = {(i, ch): j for (i, ch), j in gotos.items() if ch in self.variables}
         return actions, gotos
