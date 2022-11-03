@@ -25,5 +25,11 @@ class DeterministicSet(Iterable[T]):
     def __repr__(self):
         return "{"  + ", ".join(map(repr, self.elements)) + "}"
 
+    def __len__(self):
+        return len(self.elements)
+
+    def __eq__(self, other: "DeterministicSet[T] | set[T]"):
+        return len(self) == len(other) and set(self) == set(other)
+
     def add(self, x: T):
         self.elements[x] = None

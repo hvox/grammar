@@ -1,6 +1,29 @@
 from grammar import Grammar, Rule
 
 
+def test_prefixes():
+    rules = [
+        ("START", ("FIRST", "LAST")),
+        ("FIRST", ("(", "?", ")")),
+        ("LAST", ("[", "!", "]")),
+        ("LAST", ("{", "}")),
+    ]
+    prefixes = {
+        "START": {"("},
+        "FIRST": {"("},
+        "LAST": {"[", "{"},
+        "(": {"("},
+        "?": {"?"},
+        ")": {")"},
+        "!": {"!"},
+        "[": {"["},
+        "]": {"]"},
+        "{": {"{"},
+        "}": {"}"},
+    }
+    assert Grammar(rules).prefixes == prefixes
+
+
 def test_ll1_table_generation():
     rules = [
         ("E", ("T", "E'")),
