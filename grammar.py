@@ -211,3 +211,88 @@ class Grammar:
                     assert (i, None) not in actions, "Conflict!"
                     actions[i, None] = ("accept",)
         return actions, {k: v for k, v in gotos.items() if k[1] in self.variables}
+
+    def construct_lalr_parsing_table(self):
+        # total_hours_wasted_here = 6
+        LR0Item = NamedTuple("LR0Item", dot=int, rule=Rule)
+        LR1Item = NamedTuple("LR1Item", dot=int, rule=Rule, follower=str)
+
+        def lr0_closure(core_items: set[LR0Item]) -> set[LR0Item]:
+            item_set = set(core_items)  # TODO: use some cool datastructure for queues
+            done = False
+            while not done:
+                done = True  # TODO: optimize by using queue instead of flags
+                for i, item_rule in list(item_set):
+                    if i == len(item_rule.body) or item_rule.body[i] not in self.variables:
+                        continue
+                    next_symbol = item_rule.body[i]
+                    # TODO: optimize by per-head rules
+                    for rule in filter(lambda r: r.head == next_symbol, self.rules):
+                        new_item = LR0Item(0, rule)
+                        if new_item not in item_set:
+                            item_set.add(new_item)
+                            done = False
+            return item_set
+
+        def lr1_closure(core_items: set[LR1Item]) -> set[LR1Item]:
+            item_set = set(core_items)  # TODO: use some cool datastructure for queues
+            done = False
+            while not done:
+                done = True  # TODO: optimize by using queue instead of flags
+                for i, item_rule, follower in list(item_set):
+                    if i == len(item_rule.body) or item_rule.body[i] not in self.variables:
+                        continue
+                    next_symbol = item_rule.body[i]
+                    # TODO: optimize by per-head rules
+                    for rule in filter(lambda r: r.head == next_symbol, self.rules):
+                        followers = reduce(
+                            lambda x, y: y - {None} | x if None in y else y,
+                            map(self.prefixes.get, reversed(item_rule.body[i+1:])), {follower}
+                        )
+                        for new_item in (LR1Item(0, rule, symbol) for symbol in followers):
+                            if new_item not in item_set:
+                                item_set.add(new_item)
+                                done = False
+            return item_set
+
+        gotos, actions = {}, {}
+        # TODO: use something more appropriate for queue
+        lr0_item_sets = [{LR0Item(0, Rule(None, (self.start,)))}]
+        for i, item_set in enumerate(map(lr0_closure, lr0_item_sets)):
+            # TODO: use more efficient way to find next sets
+            for next_symbol in self.symbols:
+                if next_set := {
+                    LR0Item(i + 1, rule) for i, rule in item_set
+                    if i < len(rule.body) and rule.body[i] == next_symbol
+                }:
+                    gotos[i, next_symbol] = push_if_not_in(lr0_item_sets, next_set)
+        lalr_item_sets = [set()] * len(lr0_item_sets)
+        lalr_item_sets[0].add(LR1Item(0, Rule(None, (self.start,)), None))
+        done = False
+        while not done:
+            done = True
+            for (i, next_symbol), j in gotos.items():
+                if not lalr_item_sets[i]:
+                    continue
+                item_set = lr1_closure(lalr_item_sets[i])
+                next_set = {
+                    LR1Item(i + 1, rule, follower) for i, rule, follower in item_set
+                    if i < len(rule.body) and rule.body[i] == next_symbol
+                }
+                for item in next_set:
+                    if item in lalr_item_sets[j]:
+                        continue
+                    lalr_item_sets[j].add(item)
+                    done = False
+        for i, item_set in enumerate(map(lr1_closure, lalr_item_sets)):
+            for terminal, j in ((t, j) for t in self.terminals if (j := gotos.get((i, t)))):
+                assert (i, terminal) not in actions, "Conflict!"
+                actions[i, terminal] = ("shift", j)
+            for item in filter(lambda item: item.dot == len(item.rule.body), item_set):
+                if item.rule.head is not None:
+                    assert (i, item.follower) not in actions, "Conflict!"
+                    actions[i, item.follower] = ("reduce", item.rule)
+                elif item.follower is None:
+                    assert (i, None) not in actions, "Conflict!"
+                    actions[i, None] = ("accept",)
+        return actions, {k: v for k, v in gotos.items() if k[1] in self.variables}
