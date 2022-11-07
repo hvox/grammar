@@ -266,7 +266,7 @@ class Grammar:
                     if i < len(rule.body) and rule.body[i] == next_symbol
                 }:
                     gotos[i, next_symbol] = push_if_not_in(lr0_item_sets, next_set)
-        lalr_item_sets = [set()] * len(lr0_item_sets)
+        lalr_item_sets = [set() for _ in lr0_item_sets]
         lalr_item_sets[0].add(LR1Item(0, Rule(None, (self.start,)), None))
         done = False
         while not done:
