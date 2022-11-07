@@ -69,7 +69,7 @@ def test_slr_table_generation():
         ("F", ("(", "E", ")")),
         ("F", ("id",)),
     ]
-    table = {
+    expected_action_table = {
         (0, "("): ("shift", 4),
         (0, "id"): ("shift", 5),
         (1, "+"): ("shift", 6),
@@ -107,7 +107,14 @@ def test_slr_table_generation():
         (11, "*"): ("reduce", "F", ["(", "E", ")"]),
         (11, ")"): ("reduce", "F", ["(", "E", ")"]),
     }
-    assert Grammar(rules).construct_slr_parsing_table()[0] == table
+    expected_goto_table = {
+        (0, "E"): 1, (0, "T"): 2, (0, "F"): 3,
+        (4, "E"): 8, (4, "T"): 2, (4, "F"): 3,
+        (6, "T"): 9, (6, "F"): 3, (7, "F"): 10
+    }
+    actions, gotos = Grammar(rules).construct_slr_parsing_table()
+    assert actions == expected_action_table
+    assert gotos == expected_goto_table
 
 
 def test_clr_table_generation():
@@ -116,7 +123,7 @@ def test_clr_table_generation():
         ("C", ("c", "C")),
         ("C", ("d",)),
     ]
-    table = {
+    expected_action_table = {
         (0, "c"): ("shift", 3),
         (0, "d"): ("shift", 4),
         (1, None): ("accept",),
@@ -134,7 +141,10 @@ def test_clr_table_generation():
         (8, "c"): ("reduce", Rule(head="C", body=("c", "C"))),
         (9, None): ("reduce", Rule(head="C", body=("c", "C"))),
     }
-    assert Grammar(rules).construct_clr_parsing_table()[0] == table
+    expected_goto_table = {(0, "S"): 1, (0, "C"): 2, (2, "C"): 5, (3, "C"): 8, (6, "C"): 9}
+    actions, gotos = Grammar(rules).construct_clr_parsing_table()
+    assert actions == expected_action_table
+    assert gotos == expected_goto_table
 
 
 def test_lalr_table_generation():
@@ -143,7 +153,7 @@ def test_lalr_table_generation():
         ("C", ("c", "C")),
         ("C", ("d",)),
     ]
-    table = {
+    expected_action_table = {
         (0, "c"): ("shift", 3),
         (0, "d"): ("shift", 4),
         (1, None): ("accept",),
@@ -159,4 +169,7 @@ def test_lalr_table_generation():
         (6, "c"): ("reduce", Rule(head="C", body=("c", "C"))),
         (6, "d"): ("reduce", Rule(head="C", body=("c", "C"))),
     }
-    assert Grammar(rules).construct_lalr_parsing_table()[0] == table
+    expected_goto_table = {(0, 'S'): 1, (0, 'C'): 2, (2, 'C'): 5, (3, 'C'): 6}
+    actions, gotos = Grammar(rules).construct_lalr_parsing_table()
+    assert actions == expected_action_table
+    assert gotos == expected_goto_table
