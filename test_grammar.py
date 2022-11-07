@@ -9,19 +9,26 @@ def test_prefixes():
         ("LAST", ("{", "}")),
     ]
     prefixes = {
-        "START": {"("},
-        "FIRST": {"("},
-        "LAST": {"[", "{"},
-        "(": {"("},
-        "?": {"?"},
-        ")": {")"},
-        "!": {"!"},
-        "[": {"["},
-        "]": {"]"},
-        "{": {"{"},
-        "}": {"}"},
+        "START": {"("}, "FIRST": {"("}, "LAST": {"[", "{"},
+        "(": {"("}, "?": {"?"}, ")": {")"}, "!": {"!"},
+        "[": {"["}, "]": {"]"}, "{": {"{"}, "}": {"}"}
     }
     assert Grammar(rules).prefixes == prefixes
+
+
+def test_followers():
+    rules = [
+        ("START", ("FIRST", "LAST")),
+        ("FIRST", ("(", "?", ")")),
+        ("LAST", ("[", "!", "]")),
+        ("LAST", ("{", "}")),
+    ]
+    followers = {
+        "START": {None}, "FIRST": {"[", "{"}, "LAST": {None},
+        "(": {"?"}, "?": {")"}, ")": {"[", "{"}, "[": {"!"},
+        "!": {"]"}, "]": {None}, "{": {"}"}, "}": {None}
+    }
+    assert Grammar(rules).followers == followers
 
 
 def test_ll1_table_generation():
