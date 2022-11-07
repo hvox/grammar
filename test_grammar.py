@@ -135,3 +135,28 @@ def test_clr_table_generation():
         (9, None): ("reduce", Rule(head="C", body=("c", "C"))),
     }
     assert Grammar(rules).construct_clr_parsing_table()[0] == table
+
+
+def test_lalr_table_generation():
+    rules = [
+        ("S", ("C", "C")),
+        ("C", ("c", "C")),
+        ("C", ("d",)),
+    ]
+    table = {
+        (0, "c"): ("shift", 3),
+        (0, "d"): ("shift", 4),
+        (1, None): ("accept",),
+        (2, "c"): ("shift", 3),
+        (2, "d"): ("shift", 4),
+        (3, "c"): ("shift", 3),
+        (3, "d"): ("shift", 4),
+        (4, "d"): ("reduce", Rule(head="C", body=("d",))),
+        (4, "c"): ("reduce", Rule(head="C", body=("d",))),
+        (4, None): ("reduce", Rule(head="C", body=("d",))),
+        (5, None): ("reduce", Rule(head="S", body=("C", "C"))),
+        (6, None): ("reduce", Rule(head="C", body=("c", "C"))),
+        (6, "c"): ("reduce", Rule(head="C", body=("c", "C"))),
+        (6, "d"): ("reduce", Rule(head="C", body=("c", "C"))),
+    }
+    assert Grammar(rules).construct_lalr_parsing_table()[0] == table
