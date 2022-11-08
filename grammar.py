@@ -296,3 +296,6 @@ class Grammar:
                     assert (i, None) not in actions, "Conflict!"
                     actions[i, None] = ("accept",)
         return actions, {k: v for k, v in gotos.items() if k[1] in self.variables}
+
+    # TODO: IELR: Just like CLR, but with tables almost as small as LALR
+    # TODO: GLR: Can parse every CFG in O(n^3), deterministic ones in O(n)
