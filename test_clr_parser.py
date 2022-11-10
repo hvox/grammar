@@ -1,5 +1,5 @@
 from grammar import Grammar
-from lr1_parser import parse as parse_clr
+from clr_parser import parse as parse_clr
 
 
 def test_simplest_case():
