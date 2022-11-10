@@ -159,7 +159,7 @@ class Grammar:
                     for follower in self.followers[head]:
                         assert (i, follower) not in actions, "Conflict!"
                         # TODO: use rule numbers instead of the rules themself
-                        actions[i, follower] = ("reduce", head, body)
+                        actions[i, follower] = ("reduce", Rule(head, tuple(body)))
         gotos = {(i, ch): j for (i, ch), j in gotos.items() if ch in self.variables}
         return actions, gotos
 
