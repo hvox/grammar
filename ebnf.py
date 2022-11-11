@@ -150,6 +150,3 @@ class EBNF:
         scan = construct_lexer(patterns)
         parse = lr_parser(self.parsing_rules)
         return lambda source, start=0: parse(scan(source, start))
-
-
-print(EBNF(Path("./ebnf.ebnf").read_text()))

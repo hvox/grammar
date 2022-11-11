@@ -1,0 +1,59 @@
+#!/usr/bin/env python3.10
+r"""
+Print different statistics about a grammar
+
+Usage:
+    grammar EBNF
+    grammar -h | --help
+
+Arguments:
+    EBNF           Path to the EBNF file with a grammar
+
+Options:
+    -h --help      Show this screen.
+"""
+from pathlib import Path
+from ebnf import EBNF
+from grammar import Grammar
+from time import monotonic as time
+
+
+def titularize(title: str, content: str):
+    content_width = max(map(len, content.split("\n")))
+    return f"{' ' + title + ' ':─^{content_width}}\n" + content
+
+
+def get_parser_statistics(rules, parser):
+    try:
+        method_name = f"construct_{parser}_parsing_table"
+        t0 = time()
+        actions, gotos = getattr(Grammar(rules), method_name)()
+        delta_time = time() - t0
+        states = {state for state, _ in actions} | {state for state, _ in gotos}
+        return (f"generation_time={delta_time:.4f}  #states = {len(states):<3}  "
+                f"#actions = {len(actions):<4}  #gotos = {len(gotos)}")
+    except (AssertionError, ValueError):
+        delta_time = time() - t0
+        return f"generation_time={delta_time:.4f}  CONFLICTS DETECTED!"
+
+
+def main(ebnf_path: str):
+    grammar = EBNF(Path(ebnf_path).read_text())
+    print(titularize(ebnf_path, str(grammar) + "\n"))
+    stats = (
+        f"Variables: {len(grammar.variables)}\n"
+        f"Terminals: {len(grammar.terminals)}\n"
+        f"Symbols: {len(grammar.symbols)}\n"
+        f"Rules: {len(grammar.rules)}\n"
+        f"CFG variables: {len({var for var, _ in grammar.parsing_rules})}\n"
+        f"CFG rules: {len(grammar.parsing_rules)}\n"
+        f"LR parsing tables:\n"
+    )
+    for parser in "LL1 SLR LALR CLR".split():
+        parser_stats = get_parser_statistics(grammar.parsing_rules, parser.lower())
+        stats += f"{parser:>6}: " + parser_stats + "\n"
+    print(titularize("statistics", stats))
+
+
+if __name__ == "__main__":
+    main(__import__("docopt").docopt(__doc__)["EBNF"])
