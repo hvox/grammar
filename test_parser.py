@@ -19,7 +19,7 @@ def test_simplest_case():
     assert ast == ("S", ("C", (0, "c"), ("C", (1, "d"))), ("C", (2, "d")))
 
 
-@pytest.mark.parametrize("expr", [
+ARITHMETIC_EXPRESSIONS = [
     "1 + 16 * 0 * 880 / 7 - 23 + 6 - 4 / 6 * 9 / 7 + 201 * 798 / 73 * 2 - 911",
     "38 - 4785 * 58 * 8 * 527 + 9 / 78 * 2 / 4 + 494 * 8 + 4 - 62 - 39 + 8337",
     "8 * 4 - 7 + 47 / 1 / 7 + 156 - 3 + 20 + 48 / 8 / 6 * 915 * 38 - 425 / 81",
@@ -56,8 +56,12 @@ def test_simplest_case():
     "72 * 6 * 5 - 19 + 2 + 7 / 6077 - 706 / 883 * 5 * 7 + 8272 / 9 - 6 - 5407",
     "47 - 9 - 74 * 933 / 17 * 99 + 814 / 8 / 9 - 824 / 0 + 0 / 1 / 6737 + 472",
     "39 + 80 + 3 / 7241 / 2264 - 2195 + 2 + 9 + 2 / 622 / 7 - 1 * 3 - 45 / 69",
-])
-def test_arithmetic_expression_parsing(expr: str):
+]
+
+
+@pytest.mark.parametrize("expr_number", range(len(ARITHMETIC_EXPRESSIONS)))
+def test_arithmetic_expression_parsing(expr_number: str):
+    expr = ARITHMETIC_EXPRESSIONS[expr_number]
     tokens = [("number", int(tok)) if tok.isdigit() else (tok, tok) for tok in expr.split()]
     try:
         result = evaluate(tokens)
