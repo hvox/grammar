@@ -120,9 +120,9 @@ class EBNF:
                 _ = [dfs(head, expr) for expr in body[1:]]
             elif body[0] == "cat":
                 if args:
-                    rules[head, args] = lambda *x: ((x[0][0][0], x[-1][0][1]), head, *x)
+                    rules[head, args] = lambda *x, head=head: ((x[0][0][0], x[-1][0][1]), head, *x)
                 else:
-                    rules[head, args] = lambda: (head, ((None, None),))
+                    rules[head, args] = lambda head=head: (head, ((None, None),))
             elif body[0] == "opt":
                 return dfs(head, ("alt", args[0], ("cat",)))
             elif body[0] == "rep":
@@ -146,7 +146,7 @@ class EBNF:
     @cached_property
     def parse(self):
         tokens = [(re(s[1:-1]) if s[0] == "?" else s[1:-1], s) for s in self.terminals]
-        patterns = {pattern: lambda span, s: (tok, (span, tok, s)) for pattern, tok in tokens}
+        patterns = {pat: lambda span, s, tok=tok: (tok, (span, tok, s)) for pat, tok in tokens}
         scan = construct_lexer(patterns)
         parse = lr_parser(self.parsing_rules)
         return lambda source, start=0: parse(scan(source, start))
