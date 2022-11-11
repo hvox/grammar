@@ -1,4 +1,6 @@
 from string import whitespace, digits, ascii_letters
+from re import compile as compile_regex
+from typing import Callable
 
 
 def get_very_simple_lexer(punctuation=set(), variable_characters=None):
@@ -29,9 +31,25 @@ def get_very_simple_lexer(punctuation=set(), variable_characters=None):
                 j = i + 1
                 while j < len(source) and source[j] in variable_characters:
                     j += 1
-                yield ("identifier", source[i:j])
+                yield ("identifier", source[i:j].strip())
                 i = j
             else:
                 raise ValueError(f"Unexpected character: {repr(char)}")
         yield (None, None)
+    return scan
+
+
+def construct_lexer(patterns: dict[str, None | Callable]):
+    recognizers = [(compile_regex(pat), f) for pat, f in patterns.items()]
+
+    def scan(source: str, i: int = 0):
+        while i < len(source):
+            for regex, postprocessing in recognizers:
+                if match := regex.match(source, i):
+                    if postprocessing is not None:
+                        yield postprocessing(match.span(), match.group())
+                    i = match.end()
+                    break
+            else:
+                raise ValueError(f"Unexpected character: {repr(source[i])}")
     return scan
