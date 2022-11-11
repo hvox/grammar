@@ -54,6 +54,19 @@ def parse_ebnf_rules(source: str, i: int = 0) -> dict[str, tuple]:
 class EBNF:
     def __init__(self, rules: Iterable[tuple[str, Any]] | str):
         self.rules = parse_ebnf_rules(rules) if isinstance(rules, str) else dict(rules)
+        variables, terminals = set(self.rules), set()
+        for exp in self.rules.values():
+            stack = [exp]
+            while stack:
+                match stack.pop():
+                    case "alt" | "cat" | "opt" | "rep", *args if len(args):
+                        stack.extend(args)
+                    case terminal if terminal not in variables:
+                        terminals.add(terminal)
+        self.variables, self.terminals = variables, terminals
+        self.symbols = self.variables | self.terminals
+        for var in filter(lambda v: v[0] not in "'\"?", terminals):
+            raise Exception(f"Undefined variable {var}")
 
     def __repr__(self):
         def node_repr(node, operator_lvl=0):
