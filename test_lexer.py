@@ -1,5 +1,8 @@
+from re import compile as re
+
 import pytest
-from lexer import get_very_simple_lexer, construct_lexer
+
+from lexer import construct_lexer, get_very_simple_lexer
 
 
 @pytest.mark.parametrize("expr, tokens", [
@@ -35,9 +38,9 @@ def test_very_simple_lexer(expr, tokens):
 ])
 def test_scanner(expr, tokens):
     scan = construct_lexer({
-        r"\s+": None,
-        r"[-+*/()]": lambda _, s: (s, s),
-        r"\d+": lambda _, s: ("number", int(s)),
-        r"\w+(\s+\w+)*": lambda _, s: ("identifier", s),
+        re(r"\s+"): None,
+        re(r"[-+*/()]"): lambda _, s: (s, s),
+        re(r"\d+"): lambda _, s: ("number", int(s)),
+        re(r"\w+(\s+\w+)*"): lambda _, s: ("identifier", s),
     })
     assert list(scan(expr)) == tokens

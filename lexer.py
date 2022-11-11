@@ -1,5 +1,5 @@
-from string import whitespace, digits, ascii_letters
-from re import compile as compile_regex
+import re
+from string import ascii_letters, digits, whitespace
 from typing import Callable
 
 
@@ -39,8 +39,11 @@ def get_very_simple_lexer(punctuation=set(), variable_characters=None):
     return scan
 
 
-def construct_lexer(patterns: dict[str, None | Callable]):
-    recognizers = [(compile_regex(pat), f) for pat, f in patterns.items()]
+def construct_lexer(patterns: dict[str | re.Pattern, None | Callable]):
+    recognizers = [
+        (re.compile(re.escape(pat)) if isinstance(pat, str) else pat, f)
+        for pat, f in patterns.items()
+    ]
 
     def scan(source: str, i: int = 0):
         while i < len(source):

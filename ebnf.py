@@ -1,6 +1,6 @@
-import string
 from parser import lr_parser
 from pathlib import Path
+from re import compile as re
 from typing import Any, Iterable
 from lexer import construct_lexer
 
@@ -43,11 +43,11 @@ class EBNF:
 
 
 scan_ebnf_tokens = construct_lexer({
-    r"\s+": None,
-    r"[-|,(){}\[\]=;]": lambda _, s: (s, s),
-    r"\w+(\s+\w+)*": lambda _, s: ("identifier", s),
-    r'"[^"]*"': lambda _, s: ("terminal", s),
-    r"'[^']*'": lambda _, s: ("terminal", s),
+    re(r"\s+"): None,
+    re(r"[-|,(){}\[\]=;]"): lambda _, s: (s, s),
+    re(r"\w+(\s+\w+)*"): lambda _, s: ("identifier", s),
+    re(r'"[^"]*"'): lambda _, s: ("terminal", s),
+    re(r"'[^']*'"): lambda _, s: ("terminal", s),
 })
 parse_ebnf_tokens = lr_parser({
     ("defs", ("def", "defs")): lambda x, y: [x] + y,
