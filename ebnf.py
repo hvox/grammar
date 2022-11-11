@@ -1,3 +1,5 @@
+from collections import Counter
+from functools import cached_property
 from parser import lr_parser
 from pathlib import Path
 from re import compile as re
@@ -42,9 +44,16 @@ parse_ebnf_tokens = lr_parser({
 })
 
 
+def parse_ebnf_rules(source: str, i: int = 0) -> dict[str, tuple]:
+    rules = parse_ebnf_tokens(scan_ebnf_tokens(source, i))
+    for var in (var for var, cnt in Counter(var for var, _ in rules).items() if cnt > 1):
+        raise ValueError(f"variable {var} has multiple definitions")
+    return dict(rules)
+
+
 class EBNF:
-    def __init__(self, rules: Iterable[tuple[str, Any]]):
-        self.rules = dict(rules)
+    def __init__(self, rules: Iterable[tuple[str, Any]] | str):
+        self.rules = parse_ebnf_rules(rules) if isinstance(rules, str) else dict(rules)
 
     def __repr__(self):
         def node_repr(node, operator_lvl=0):
@@ -81,15 +90,5 @@ class EBNF:
             result.extend(lines)
         return "\n".join(result)
 
-    @staticmethod
-    def parse(source: str, start: int = 0):
-        rules = {}
-        tokens = scan_ebnf_tokens(source, start)
-        for variable, definition in parse_ebnf_tokens(tokens):
-            if variable in rules:
-                raise ValueError(f"variable {variable} has multiple definitions")
-            rules[variable] = definition
-        return EBNF(rules)
 
-
-print(EBNF.parse(Path("./ebnf.ebnf").read_text()))
+print(EBNF(Path("./ebnf.ebnf").read_text()))
