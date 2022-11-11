@@ -4,8 +4,6 @@ from re import compile as re
 from typing import Any, Iterable
 from lexer import construct_lexer
 
-# from lib.deterministic import DeterministicSet as set
-
 # Extended Backus–Naur form
 #    =    definition
 #    ,    concatenation
@@ -18,6 +16,30 @@ from lexer import construct_lexer
 # ? ... ? special sequence
 #    -    exception  <-- not supported yet
 #    ;    termination
+
+scan_ebnf_tokens = construct_lexer({
+    re(r"\s+"): None,
+    re(r"[-|,(){}\[\]=;]"): lambda _, s: (s, s),
+    re(r"\w+(\s+\w+)*"): lambda _, s: ("identifier", s),
+    re(r"\?[^?]+\?"): lambda _, s: ("special sequence", s),
+    re(r'"[^"]+"'): lambda _, s: ("terminal", s),
+    re(r"'[^']+'"): lambda _, s: ("terminal", s),
+})
+parse_ebnf_tokens = lr_parser({
+    ("defs", ("def", "defs")): lambda x, y: [x] + y,
+    ("defs", ("def",)): lambda x: [x],
+    ("def", ("identifier", "=", "alt", ";")): lambda var, _, expr, __: (var, expr),
+    ("alt", ("alt", "|", "cat")): lambda x, _, y: x + (y,) if x[0] == "alt" else ("alt", x, y),
+    ("alt", ("cat",)): lambda x: x,
+    ("cat", ("cat", ",", "term")): lambda x, _, y: x + (y,) if x[0] == "cat" else ("cat", x, y),
+    ("cat", ("term",)): lambda x: x,
+    ("term", ("terminal",)): lambda x: x,
+    ("term", ("identifier",)): lambda x: x,
+    ("term", ("special sequence",)): lambda x: x,
+    ("term", ("[", "alt", "]")): lambda _, x, __: ("opt", x),
+    ("term", ("{", "alt", "}")): lambda _, x, __: ("rep", x),
+    ("term", ("(", "alt", ")")): lambda _, x, __: x,
+})
 
 
 class EBNF:
@@ -59,39 +81,15 @@ class EBNF:
             result.extend(lines)
         return "\n".join(result)
 
-
-scan_ebnf_tokens = construct_lexer({
-    re(r"\s+"): None,
-    re(r"[-|,(){}\[\]=;]"): lambda _, s: (s, s),
-    re(r"\w+(\s+\w+)*"): lambda _, s: ("identifier", s),
-    re(r"\?[^?]+\?"): lambda _, s: ("special sequence", s),
-    re(r'"[^"]+"'): lambda _, s: ("terminal", s),
-    re(r"'[^']+'"): lambda _, s: ("terminal", s),
-})
-parse_ebnf_tokens = lr_parser({
-    ("defs", ("def", "defs")): lambda x, y: [x] + y,
-    ("defs", ("def",)): lambda x: [x],
-    ("def", ("identifier", "=", "alt", ";")): lambda var, _, expr, __: (var, expr),
-    ("alt", ("alt", "|", "cat")): lambda x, _, y: x + (y,) if x[0] == "alt" else ("alt", x, y),
-    ("alt", ("cat",)): lambda x: x,
-    ("cat", ("cat", ",", "term")): lambda x, _, y: x + (y,) if x[0] == "cat" else ("cat", x, y),
-    ("cat", ("term",)): lambda x: x,
-    ("term", ("terminal",)): lambda x: x,
-    ("term", ("identifier",)): lambda x: x,
-    ("term", ("special sequence",)): lambda x: x,
-    ("term", ("[", "alt", "]")): lambda _, x, __: ("opt", x),
-    ("term", ("{", "alt", "}")): lambda _, x, __: ("rep", x),
-    ("term", ("(", "alt", ")")): lambda _, x, __: x,
-})
+    @staticmethod
+    def parse(source: str, start: int = 0):
+        rules = {}
+        tokens = scan_ebnf_tokens(source, start)
+        for variable, definition in parse_ebnf_tokens(tokens):
+            if variable in rules:
+                raise ValueError(f"variable {variable} has multiple definitions")
+            rules[variable] = definition
+        return EBNF(rules)
 
 
-def parse_ebnf(source: str, i: int = 0):
-    rules = {}
-    for variable, definition in parse_ebnf_tokens(scan_ebnf_tokens(source, i)):
-        if variable in rules:
-            raise ValueError(f"variable {variable} is defined twise")
-        rules[variable] = definition
-    return EBNF(rules)
-
-
-print(parse_ebnf(Path("./ebnf.ebnf").read_text()))
+print(EBNF.parse(Path("./ebnf.ebnf").read_text()))
