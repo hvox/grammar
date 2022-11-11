@@ -15,7 +15,7 @@ def parse(
     while True:
         match action_table.get((stack[-1], token_type), "error"):
             case "error":
-                raise ValueError("Syntax error?")
+                raise ValueError("Unexpected token: " + repr(token_type))
             case ("shift", j):
                 stack.append(next_token)
                 stack.append(j)

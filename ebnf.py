@@ -1,10 +1,11 @@
 from collections import Counter
 from functools import cached_property
-from parser import lr_parser
+from parser import ast_to_str, lr_parser
 from pathlib import Path
 from re import compile as re
 from typing import Any, Iterable
 from lexer import construct_lexer
+from libs.set_utils import add_to_set
 
 # Extended Backus–Naur form
 #    =    definition
@@ -102,6 +103,49 @@ class EBNF:
             lines[-1] += ";"
             result.extend(lines)
         return "\n".join(result)
+
+    @cached_property
+    def parse(self):
+        tokens = [(re(s[1:-1]) if s[0] == "?" else s[1:-1], s) for s in self.terminals]
+        patterns = {pattern: lambda span, s: (tok, (span, tok, s)) for pattern, tok in tokens}
+        scan = construct_lexer(patterns)
+        rules, used_names = {}, set(self.symbols)
+
+        def dfs(head, body):
+            nonlocal used_names
+            used_names.add(head)
+            if body in used_names:
+                body = ("cat", body)
+            args = tuple(
+                str(arg) if str(arg) in used_names else dfs(str(arg), arg) for arg in body[1:]
+            )
+            if body[0] == "alt":
+                _ = [dfs(head, expr) for expr in body[1:]]
+            elif body[0] == "cat":
+                if args:
+                    rules[head, args] = lambda *x: ((x[0][0][0], x[-1][0][1]), head, *x)
+                else:
+                    rules[head, args] = lambda: (head, ((None, None),))
+            elif body[0] == "opt":
+                return dfs(head, ("alt", args[0], ("cat",)))
+            elif body[0] == "rep":
+                arg = args[0]
+                arg_repeated = add_to_set(used_names, str(arg) + " repeated")
+                dfs(arg_repeated, ("opt", ("cat", arg_repeated, arg)))
+                return dfs(head, (arg_repeated,))
+            return head
+
+        for head, expr in (
+            (head, expr)
+            for head, alts in self.rules.items()
+            for expr in (alts[1:] if alts[0] == "alt" else [alts])
+        ):
+            # TODO: use stack instead of complex local function
+            old_rules, rules = rules, {}
+            dfs(head, expr)
+            rules = old_rules | dict(reversed(rules.items()))
+        parse = lr_parser(rules)
+        return lambda source, start=0: parse(scan(source, start))
 
 
 print(EBNF(Path("./ebnf.ebnf").read_text()))
