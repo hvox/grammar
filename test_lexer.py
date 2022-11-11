@@ -18,6 +18,4 @@ scan = get_very_simple_lexer("+-*/()")
     ("f(x)", [('identifier', 'f'), ('(', '('), ('identifier', 'x'), (')', ')')]),
 ])
 def test_very_simple_lexer(expr, tokens):
-    if list(scan(expr)) != tokens:
-        print(list(scan(expr))[:-1])
     assert list(scan(expr)) == tokens + [(None, None)]
