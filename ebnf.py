@@ -105,10 +105,7 @@ class EBNF:
         return "\n".join(result)
 
     @cached_property
-    def parse(self):
-        tokens = [(re(s[1:-1]) if s[0] == "?" else s[1:-1], s) for s in self.terminals]
-        patterns = {pattern: lambda span, s: (tok, (span, tok, s)) for pattern, tok in tokens}
-        scan = construct_lexer(patterns)
+    def parsing_rules(self):
         rules, used_names = {}, set(self.symbols)
 
         def dfs(head, body):
@@ -144,7 +141,14 @@ class EBNF:
             old_rules, rules = rules, {}
             dfs(head, expr)
             rules = old_rules | dict(reversed(rules.items()))
-        parse = lr_parser(rules)
+        return rules
+
+    @cached_property
+    def parse(self):
+        tokens = [(re(s[1:-1]) if s[0] == "?" else s[1:-1], s) for s in self.terminals]
+        patterns = {pattern: lambda span, s: (tok, (span, tok, s)) for pattern, tok in tokens}
+        scan = construct_lexer(patterns)
+        parse = lr_parser(self.parsing_rules)
         return lambda source, start=0: parse(scan(source, start))
 
 
