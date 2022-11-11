@@ -40,7 +40,22 @@ class EBNF:
                     return terminal
         result = []
         for head, body in self.rules.items():
-            result.append(f"{head} = {node_repr(body)};")
+            if body[0] != "alt":
+                result.append(f"{head} = {node_repr(body)};")
+                continue
+            body = [node_repr(alt, 1) for alt in body[1:]]
+            if sum(map(len, body)) + 3 * len(body) + 1 + len(head) <= 72:
+                result.append(f"{head} = {' | '.join(body)};")
+                continue
+            lines = [head]
+            for i, alt in enumerate(body):
+                if len(lines[-1]) + 3 + len(alt) <= 71 + (i != len(body) - 1):
+                    lines[-1] += " | " + alt
+                else:
+                    lines.append(" " * len(head) + " | " + alt)
+            lines[0] = lines[0].replace("|", "=", 1)
+            lines[-1] += ";"
+            result.extend(lines)
         return "\n".join(result)
 
 
