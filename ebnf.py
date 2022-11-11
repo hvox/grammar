@@ -24,12 +24,14 @@ class EBNF:
         self.rules = dict(rules)
 
     def __repr__(self):
-        def node_repr(node):
+        def node_repr(node, operator_lvl=0):
             match node:
                 case "alt", *alts:
-                    return " | ".join(map(node_repr, alts))
+                    result = " | ".join(node_repr(alt, 1) for alt in alts)
+                    return result if operator_lvl < 1 else f"({result})"
                 case "cat", *terms:
-                    return ", ".join(map(node_repr, terms))
+                    result = ", ".join(node_repr(term, 2) for term in terms)
+                    return result if operator_lvl < 2 else f"({result})"
                 case "opt", value:
                     return "[" + node_repr(value) + "]"
                 case "rep", value:
