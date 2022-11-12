@@ -1,0 +1,5 @@
+sum = product | sum, "+", product | sum, "-", product;
+product = factor | product, "*", factor | product, "/", factor;
+factor = "(", sum, ")" | number | identifier;
+identifier = ? chars ?;
+number = ? digits ?;
