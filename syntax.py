@@ -4,6 +4,7 @@ from re import compile as compile_re
 from typing import Any, Callable, NamedTuple
 from libs.list_utils import push_if_not_in
 from libs.string_utils import split_str
+from libs.advanced_collections_v151 import FrozenOrderedSet, GrowableOrderedSet
 
 Rule = NamedTuple("Rule", head=str, body=tuple[str, ...])
 Node = NamedTuple("Node", span=str, value=Any)
@@ -31,19 +32,19 @@ class Syntax:
         return "\n  ".join(rules) + "\ntokens: " + ", ".join(self.tokens)
 
     @cached_property
-    def get_prefixes(self) -> Callable[[str | tuple[str, ...]], set[str | None]]:
+    def get_prefixes(self) -> Callable[[str | tuple[str, ...]], FrozenOrderedSet[str | None]]:
         # TODO: speed up the thing
-        prefixes = {tok: {tok} for tok in self.tokens}
-        prefixes |= {node: set() for node in self.nodes}
+        prefixes = {tok: GrowableOrderedSet([tok]) for tok in self.tokens}
+        prefixes |= {node: GrowableOrderedSet() for node in self.nodes}
 
-        def get_prefixes(body: str | tuple[str, ...]) -> set[str | None]:
+        def get_prefixes(body: str | tuple[str, ...]) -> FrozenOrderedSet[str | None]:
             if isinstance(body, str):
-                return prefixes[body]
+                return FrozenOrderedSet(prefixes[body])
             if len(body) == 0 or body[0] is None:
-                return set([None])
+                return FrozenOrderedSet([None])
             if None not in prefixes[body[0]]:
                 return prefixes[body[0]]
-            return prefixes[body[0]] - {None} | get_prefixes(body[1:])
+            return FrozenOrderedSet(prefixes[body[0]] - {None} | get_prefixes(body[1:]))
 
         done = False
         while not done:
@@ -55,41 +56,35 @@ class Syntax:
                     done = False
         return get_prefixes
 
-    def lr1_closure(self, core_items: set[LR1Item]) -> set[LR1Item]:
-        # TODO speed up the thing by not using "while not done"
-        item_set = set(core_items)  # TODO: use some cool datastructure for queues
-        done = False
-        while not done:
-            done = True  # TODO: optimize by using queue instead of flags
-            for i, item_rule, follower in list(item_set):
-                # TODO: define function for tuple.get instead of this mess
-                for rule in self.nodes.get((item_rule.body + (None,))[i], []):
-                    for follower in self.get_prefixes(item_rule.body[i+1:] + (follower,)):
-                        new_item = LR1Item(0, rule, follower)
-                        if new_item not in item_set:
-                            item_set.add(new_item)
-                            done = False
-        return item_set
+    def lr1_closure(self, core_items: set[LR1Item]) -> FrozenOrderedSet[LR1Item]:
+        item_set = GrowableOrderedSet(core_items)
+        for i, item_rule, follower in item_set:
+            # TODO: define function for tuple.get instead of this mess
+            for rule in self.nodes.get((item_rule.body + (None,))[i], []):
+                for follower in self.get_prefixes(item_rule.body[i+1:] + (follower,)):
+                    new_item = LR1Item(0, rule, follower)
+                    if new_item not in item_set:
+                        item_set.add(new_item)
+        return FrozenOrderedSet(item_set)
 
     def get_clr_parsing_table(self, root_node: str):
         gotos, actions = {}, {}
         # TODO: use something more appropriate for queue
-        item_sets = [{LR1Item(dot=0, rule=Rule(head=None, body=(root_node,)), follower=None)}]
+        root_item = LR1Item(dot=0, rule=Rule(head=None, body=(root_node,)), follower=None)
+        item_sets = [FrozenOrderedSet([root_item])]
         for i, item_set in enumerate(map(self.lr1_closure, item_sets)):
             # TODO: use more efficient way to find next sets
             for next_symbol in chain(self.nodes, self.tokens):
-                if next_set := {
+                if next_set := FrozenOrderedSet(
                     LR1Item(i + 1, rule, follower)
                     for i, rule, follower in item_set
                     if i < len(rule.body) and rule.body[i] == next_symbol
-                }:
+                ):
                     gotos[i, next_symbol] = push_if_not_in(item_sets, next_set)
-        # gotos are deterministic, actions are not
         for i, item_set in enumerate(map(self.lr1_closure, item_sets)):
             for terminal, j in ((t, j) for t in self.tokens if (j := gotos.get((i, t)))):
                 assert (i, terminal) not in actions, "Conflict!"
                 actions[i, terminal] = ("shift", j)
-            # TODO: make table generation deterministic by using something instead of set
             for item in filter(lambda item: item.dot == len(item.rule.body), item_set):
                 if item.rule.head is not None:
                     assert (i, item.follower) not in actions, "Conflict!"
